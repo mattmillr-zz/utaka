@@ -7,7 +7,29 @@ Created on Jul 8, 2009
 
 def createObject():
     """
-    
+    LOOK UP 100-continue
+            cache-control
+    params:
+        str bucket
+        str key
+        dict authorization
+        cache-control - optional 
+        content-length
+        content-type - optional
+        content-disposition - optional
+        content-md5 - optional
+        content-encoding - optional
+        acl - optional
+        metadata - optional
+    returns:
+        content-type
+        etag
+        
+        
+        
+        
+        
+        
     """
     pass
 
@@ -20,7 +42,9 @@ def destroyObject():
 def getObject():
     """
     params:
+        str bucket
         str key
+        dict authorization:
         bool getMetadata
         bool getData
         int byteRangeStart - optional
@@ -39,9 +63,18 @@ def getObject():
         str content-length - conditional
         str content-range - conditional
         dict metadata
-        data
+        bytestream? data
         
-    throws: precondition failed, not modified,  
+    throws:
+        AccessDenied
+        InvalidAccessKeyId
+        InvalidArgument?
+        InvalidBucketName
+        InvalidRange
+        NoSuchBucket
+        NoSuchKey
+        PreconditionFailed
+        SignatureDoesNotMatch         
     """
     pass
 
@@ -53,7 +86,10 @@ def cloneObject():
 
 def getObjectACP():
     """
-    
+    params:
+        str bucket
+        str key
+        
     """
     pass
 
