@@ -4,47 +4,12 @@ Created on Jul 8, 2009
 @author: Andrew
 '''
 
-
-def createObject():
-    """
-    LOOK UP 100-continue
-            cache-control
-    params:
-        str bucket
-        str key
-        dict authorization
-        cache-control - optional 
-        content-length
-        content-type - optional
-        content-disposition - optional
-        content-md5 - optional
-        content-encoding - optional
-        acl - optional
-        metadata - optional
-    returns:
-        content-type
-        etag
-        
-        
-        
-        
-        
-        
-    """
-    pass
-
-def destroyObject():
-    """
-    
-    """
-    pass
-
 def getObject():
     """
     params:
+        str user
         str bucket
         str key
-        dict authorization:
         bool getMetadata
         bool getData
         int byteRangeStart - optional
@@ -54,50 +19,91 @@ def getObject():
             str ifNotMatchTag - optional    
             str ifModifiedSinceDate - optional
             str ifNotModifiedSinceDate - optional
+            str ifRange - optional
     returns:
         str key
         str etag
         str lastModified
-        str content-type
-        str content-disposition - optional
-        str content-length - conditional
-        str content-range - conditional
         dict metadata
-        bytestream? data
+        str data
+        str content-type
+        str content-disposition - conditional
+        str content-range - conditional
         
     throws:
-        AccessDenied
-        InvalidAccessKeyId
-        InvalidArgument?
+        InvalidKeyName
         InvalidBucketName
+        InvalidUserName
+        BucketNotFound
+        UserNotFound
+        KeyNotFound
+        InvalidArgument?
         InvalidRange
-        NoSuchBucket
-        NoSuchKey
         PreconditionFailed
-        SignatureDoesNotMatch         
+    """
+    pass
+
+def setObject():
+    """
+    params:
+        str key
+        str bucket
+        str user
+        dict metadata
+        str data
+        content-type - optional
+        content-disposition - optional
+        content-md5 - optional
+        content-encoding - optional
+    returns:
+        content-type
+        etag
+    throws:
+        InvalidKeyName
+        InvalidBucketName
+        InvalidUserName
+        BucketNotFound
+        UserNotFound
     """
     pass
 
 def cloneObject():
     """
-    
+    params:
+        str sourceKey
+        str sourceBucket
+        str destinationKey
+        str destinationBucket
+        str user
+        dict metadata - optional
+        dict preconditions:
+            str ifMatchTag
+            str ifNotMatchTag
+            str ifModifiedSinceDate
+            str ifNotModifiedSinceDate
+    throws:
+        InvalidKeyName
+        InvalidBucketName
+        InvalidUserName
+        KeyNotFound
+        BucketNotFound
+        UserNotFound
+        PreconditionFailed        
     """
     pass
 
-def getObjectACP():
+def destroyObject():
     """
     params:
-        str bucket
         str key
-        
+        str bucket
+        str user
+    throws:
+        InvalidKeyName
+        InvalidBucketName
+        InvalidUserName
+        KeyNotFound
+        BucketNotFound
+        UserNotFound
     """
     pass
-
-def setObjectACP():
-    """
-    params:
-    str key
-    
-    """
-    pass
-    
