@@ -1,0 +1,26 @@
+[common]
+
+#package_base_path : /var/lib/html/Utaka/
+customHeaderPrefix : x-hisg-
+subresource : acl,location,logging,torrent
+
+[database]
+
+mysql_utaka_hostname : localhost
+mysql_utaka_username : utakaUser
+mysql_utaka_password : utakaPw
+mysql_utaka_database : utaka
+
+mysql_acp_hostname : localhost
+mysql_acp_username : utakaUser
+mysql_acp_password : utakaPw
+mysql_acp_database : utaka
+
+[authentication]
+
+header : Authorization
+prefix : HISG
+mysql_hostname : localhost
+mysql_username : root
+mysql_password : aburke
+mysql_database : utaka
