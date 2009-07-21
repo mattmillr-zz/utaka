@@ -4,7 +4,7 @@ Created on Jul 8, 2009
 @author: Andrew
 '''
 
-def getObject():
+def getObject(params):
     """
     params:
         str user
@@ -14,12 +14,11 @@ def getObject():
         bool getData
         int byteRangeStart - optional
         int byteRangeEnd - optional
-        dict preconditionals:
-            str ifMatchTag - optional
-            str ifNotMatchTag - optional    
-            str ifModifiedSinceDate - optional
-            str ifNotModifiedSinceDate - optional
-            str ifRange - optional
+        str ifMatchTag - optional
+        str ifNotMatchTag - optional    
+        str ifModifiedSinceDate - optional
+        str ifNotModifiedSinceDate - optional
+        str ifRange - optional
     returns:
         str key
         str etag
