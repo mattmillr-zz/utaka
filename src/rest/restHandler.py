@@ -6,7 +6,7 @@ Created on Jul 21, 2009
 
 
 from mod_python import apache
-from Utaka.UtakaRequest import UtakaRequest
+from utaka.src.rest.UtakaRequest import UtakaRequest
 #message handler
 
 def handler(req):
@@ -14,13 +14,13 @@ def handler(req):
     utakaRequest = UtakaRequest(req)
 
     if utakaRequest.key:
-        from Utaka.RestResources.UtakaObject import UtakaObject
+        from utaka.src.rest.UtakaObject import UtakaObject
         restResource = UtakaObject(utakaRequest)
     elif utakaRequest.bucket:
-        from Utaka.RestResources.UtakaBucket import UtakaBucket
+        from utaka.src.rest.UtakaBucket import UtakaBucket
         restResource = UtakaBucket(utakaRequest)
     else:
-        from Utaka.RestResources.UtakaService import UtakaService
+        from utaka.src.rest.UtakaService import UtakaService
         restResource = UtakaService(utakaRequest)
 
     return restResource.handleRequest()
