@@ -16,6 +16,7 @@ insert into user(username, accesskey, secretkey) values('UTAKA_AUTHENTICATED_USE
 CREATE TABLE bucket (
 	userid BIGINT UNSIGNED NOT NULL,
 	bucket VARCHAR(32) PRIMARY KEY NOT NULL,
+	bucket_creation_time DATETIME,
 	FOREIGN KEY (userid) REFERENCES user(userid)	
 ) ENGINE=InnoDB;
 
@@ -24,9 +25,9 @@ CREATE TABLE object (
 	object VARCHAR(64) NOT NULL,
 	bucket VARCHAR(32) NOT NULL,
 	hashfield blob,
-	create_time DATETIME,
+	object_create_time DATETIME,
 	eTag VARCHAR(32),
-	mod_time DATETIME,
+	object_mod_time DATETIME,
 	PRIMARY KEY(object, bucket),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket)

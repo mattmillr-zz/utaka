@@ -9,8 +9,8 @@ Created on Jul 21, 2009
 
 from mod_python import apache
 from mod_python import util
-from Utaka.Exceptions.ServerExceptions import ServerException
-import Utaka.config as config
+from Utaka.src.errors.ServerExceptions import ServerException
+import Utaka.src.config as config
 
 def getUser(req):
 
@@ -35,12 +35,8 @@ def getUser(req):
                 else:
                     try:
                         #establish connection and query for user and key
-                        __host = config.get('authentication', 'mysql_hostname')
-                        __user = config.get('authentication', 'mysql_username')
-                        __upw = config.get('authentication', 'mysql_password')
-                        __db = config.get('authentication', 'mysql_database')
-                        from Utaka.DataAccess import connection
-                        __conn = connection.Connection(__host, __user, __upw, __db)
+                        from Utaka.src.DataAccess import connection
+                        __conn = connection.Connection('authentication')
                         __dbResult = __conn.executeStatement('select userid, secretKey from user where accessKey = %s', (__accessKey,))
                         __user, __secretKey = __dbResult[0]
                     except Exception:

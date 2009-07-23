@@ -5,7 +5,7 @@ Created on Jul 22, 2009
 '''
 
 import ConfigParser
-from Utaka.Exceptions.ServerExceptions import ServerException
+from Utaka.src.errors.ServerExceptions import ServerException
 
 configFile = "/var/www/html/Utaka/.utaka_config"
 

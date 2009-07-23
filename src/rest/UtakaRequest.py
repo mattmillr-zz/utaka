@@ -5,7 +5,7 @@ Created on Jul 21, 2009
 '''
 
 from mod_python import apache
-from Utaka.RestResources.HMAC_SHA1_Authentication import getUser
+from Utaka.src.rest.HMAC_SHA1_Authentication import getUser
 
 class UtakaRequest:
 
