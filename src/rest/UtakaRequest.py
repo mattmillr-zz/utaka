@@ -23,6 +23,7 @@ class UtakaRequest:
 		self.req = req
 		self.bucket = self.key = None
 		self.subresources = {}
+		self.__writeBuffer = ''
 
 		#Query string digest
 		if self.req.args:
@@ -38,7 +39,7 @@ class UtakaRequest:
 					'''raise error'''
 
 		#URI digest
-		uriDigestResults = uriDigest(req.uri)
+		uriDigestResults = self.uriDigest(req.uri)
 		self.bucket = uriDigestResults.get('bucket')
 		self.key = uriDigestResults.get('key')
 
@@ -54,11 +55,18 @@ class UtakaRequest:
 				self.customHeaderTable[val.lower()[len(self.customHeaderPrefix):]] = self.req.headers_in[val]
 
 		#Get Authenticated User
-		self.user = getUser(req)
+		self.user = getUser(self.req)
 
 		#Check date
 		#check customDateHeader then date header
+		
+	def write(self, msg):
+		self.__writeBuffer += msg
 
+	def send(self):
+		self.req.set_content_length(len(self.__writeBuffer))
+		self.req.write(self.__writeBuffer)
+		
 	def uriDigest(self, uri):
 		results = {}
 		splitURI = uri.split('/', 2)
@@ -70,3 +78,5 @@ class UtakaRequest:
 		elif len(splitURI) == 1:
 			results['bucket'] = splitURI[0]
 		return results
+		
+		

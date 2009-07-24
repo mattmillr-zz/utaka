@@ -4,79 +4,76 @@ Created on Jul 21, 2009
 @author: Andrew
 '''
 
-
-
-
 class UtakaObject:
 
 	def __init__(self, utakaReq):
 		self.utakaReq = utakaReq
 
 
-
-
-
 	def handleRequest(self):
-
 		if 'acl' in self.utakaReq.subresources:
 			if self.utakaReq.req.method == 'GET':
-				operation = __getAclOperation()
+				operation = self.__getAclOperation
 			elif self.utakaReq.req.method == 'PUT':
-				operation = __putAclOperation()
+				operation = self.__putAclOperation
 			else:
 				#raise error
-		else:
-			if self.utakaReq.req.method == 'GET':
-				operation = __getOperation
-			elif self.utakaReq.req.method == 'PUT':
-				operation = __putOperation
-			elif self.utakaReq.req.method == 'POST':
-				operation = __postOperation
-			elif self.utakaReq.req.method == 'HEAD':
-				operation = __headOperation
-			elif self.utakaReq.req.method == 'COPY':
-				operation = __copyOperation
-			elif self.utakaReq.req.method == 'DELETE':
-				operation = __deleteOperation
+		elif self.utakaReq.req.method == 'GET':
+			operation = self.__getOperation
+		elif self.utakaReq.req.method == 'PUT':
+			operation = self.__putOperation
+		elif self.utakaReq.req.method == 'POST':
+			operation = self.__postOperation
+		elif self.utakaReq.req.method == 'HEAD':
+			operation = self.__headOperation
+		elif self.utakaReq.req.method == 'COPY':
+			operation = self.__copyOperation
+		elif self.utakaReq.req.method == 'DELETE':
+			operation = self.__deleteOperation
 
 		return operation()
 
 
+	def __getAclOperation(self):
+		pass
 
+
+	def __putAclOperation(self):
+		pass
+
+
+	def __postOperation(self):
+		pass
 
 
 	def __copyOperation(self):
 		sourceURI = self.utakaReq.customHeadersTable.get('copy-source')
-				if sourceURI:
-					import urllib
-					srcUriDigestResult = self.utakaReq.uriDigest(urllib.unquote(sourceURI))
-					skey = srcUriDigestResult['key']
-					sbucket = srcUriDigestResult['bucket']
-				else:
-					#raise error
-
-				metadataDirective = self.utakaReq.customHeadersTable('metadata-directive', 'COPY')
-				metadata = None
-				if metadataDirective == 'REPLACE':
-					#GET METADATA
-					for val in self.utakaReq.customHeaders.keys():
-						if val.lower().startswith('meta-'):
-							metadata[val.lower()[len('meta-'):]] = self.utakaReq.customHeaders[val]
-				elif metadataDirective == 'COPY':
-					if skey == self.utakaReq.key:
-						#raise error
-				else:
-					#raise error
-				result = cloneObject( user = self.utakaReq.user, sourceKey = skey,
-					sourceBucket = sbucket, destinationKey = self.utakaReq.key,
-					destinationBucket = self.utaka.bucket, metadata = metadata,
-					ifModifiedSince=self.utakaReq.customHeadersTable.get('if-modified-since'),
-					ifUnmodifiedSince=self.utakaReq.customHeadersTable.get('if-unmodified-since'),
-					ifMatch = self.utakaReq.customHeadersTable.get('if-match'),
-					ifNoneMatch = self.utakaReq.customHeadersTable.get('if-none-match'))
-
-
-
+		if sourceURI:
+			import urllib
+			srcUriDigestResult = self.utakaReq.uriDigest(urllib.unquote(sourceURI))
+			skey = srcUriDigestResult['key']
+			sbucket = srcUriDigestResult['bucket']
+		else:
+			#raise error
+		metadataDirective = self.utakaReq.customHeadersTable('metadata-directive', 'COPY')
+		metadata = None
+		if metadataDirective == 'REPLACE':
+			#GET METADATA
+			for val in self.utakaReq.customHeaders.keys():
+				if val.lower().startswith('meta-'):
+					metadata[val.lower()[len('meta-'):]] = self.utakaReq.customHeaders[val]
+		elif metadataDirective == 'COPY':
+			if skey == self.utakaReq.key:
+				#raise error
+		else:
+			#raise error
+		result = cloneObject( user = self.utakaReq.user, sourceKey = skey,
+			sourceBucket = sbucket, destinationKey = self.utakaReq.key,
+			destinationBucket = self.utaka.bucket, metadata = metadata,
+			ifModifiedSince=self.utakaReq.customHeadersTable.get('if-modified-since'),
+			ifUnmodifiedSince=self.utakaReq.customHeadersTable.get('if-unmodified-since'),
+			ifMatch = self.utakaReq.customHeadersTable.get('if-match'),
+			ifNoneMatch = self.utakaReq.customHeadersTable.get('if-none-match'))
 
 
 	def __getOperation(self):
@@ -90,10 +87,7 @@ class UtakaObject:
 			ifNoneMatch = self.utakaReq.req.headers_in.get('if-none-match'),
 			ifRange = self.utakaReq.req.headers_in.get('if-range'),
 			getMetaData = True, getData = True)
-				#result - eTag, contentLength, contentType, contentRange, lastModified, metadata, data
-
-
-
+			#result - eTag, contentLength, contentType, contentRange, lastModified, metadata, data
 
 
 	def __putOperation(self):
@@ -106,9 +100,6 @@ class UtakaObject:
 			metadata = self.utakaReq.customMetadata,
 			acl = self.utakaReq.customAcl,
 			data = self.utakaReq.req.read())
-
-
-
 
 
 	def __headOperation(self):
@@ -124,14 +115,8 @@ class UtakaObject:
 			getMetaData = True, getData = False)
 
 
-
-
-
 	def __deleteOperation(self):
 		result = destroyObject(key = self.utakaReq.key, bucket = self.utakaReq.bucket, user = self.utakaReq.user)
-
-
-
 
 
 	def __digestRange(self):
@@ -146,4 +131,3 @@ class UtakaObject:
 			else:
 				'''raise exception'''
 		return int(startRange), int(endRange)
-

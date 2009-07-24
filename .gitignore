@@ -1,1 +1,4 @@
+files
 *.pyc
+config/.utaka_config
+.gitignore

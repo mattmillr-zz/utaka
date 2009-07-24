@@ -12,6 +12,7 @@ CREATE TABLE user (
 
 insert into user(username, accesskey, secretkey) values('UTAKA_ALL_USERS', '', '');
 insert into user(username, accesskey, secretkey) values('UTAKA_AUTHENTICATED_USERS', null, null);
+insert into user(username, accesskey, secretkey) values('andrew', 'access', 'secret');
 
 CREATE TABLE bucket (
 	userid BIGINT UNSIGNED NOT NULL,
@@ -28,6 +29,7 @@ CREATE TABLE object (
 	object_create_time DATETIME,
 	eTag VARCHAR(32),
 	object_mod_time DATETIME,
+	size INT UNSIGNED,
 	PRIMARY KEY(object, bucket),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket)

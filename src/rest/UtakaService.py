@@ -8,35 +8,34 @@ UtakaService currently only implements GET which returns a list of buckets of th
 
 
 from mod_python import apache
+import utaka.src.errors.DataAccessErrors
+
 
 class UtakaService:
 
-	'''INIT'''
+
 	def __init__(self, utakaReq):
-		self.req = utakaReq
+		self.utakaReq = utakaReq
 
 
-
-	'''HANDLE REQUEST'''
 	def handleRequest(self):
-		if self.req.method == 'GET':
-			operation = __getOperation()
+		if self.utakaReq.req.method == 'GET':
+			operation = self.__getOperation
 		else:
-			raise apache.SERVER_RETURN, apache.HTTP_NOT_IMPLEMENTED
+			raise Exception
 
 		return operation()
 
-	'''GET'''
+
 	def __getOperation(self):
-		try:
-			result = Utaka.src.core.service.getService(self.req.user)
-		except Exception, e:
-			pass
-		else:
-			userDict = result['user']
-			listOfBuckets = result['buckets']
-			self.req.req.content_type = 'application/xml'
-			self.req.write(self.__getServiceXMLResponse(userDict, listOfBuckets))
+		import utaka.src.core.Service as Service
+		result = Service.getService(self.utakaReq.user)
+		userDict = result['user']
+		listOfBuckets = result['buckets']
+		self.utakaReq.req.content_type = 'application/xml'
+		self.utakaReq.write(self.__getServiceXMLResponse(userDict, listOfBuckets))
+		return apache.OK
+
 
 	def __getServiceXMLResponse(self, userDictionary, bucketDictionaryList):
 		import xml.dom.minidom
@@ -51,7 +50,7 @@ class UtakaService:
 		#owner
 		listAllBucketsEl.appendChild(ownerEl)
 		ownerEl.appendChild(ownerIdEl)
-		ownerIdEl.appendChild(doc.createTextNode(userDictionary['userid']))
+		ownerIdEl.appendChild(doc.createTextNode(str(userDictionary['userId'])))
 		ownerEl.appendChild(ownerNameEl)
 		ownerNameEl.appendChild(doc.createTextNode(userDictionary['username']))
 

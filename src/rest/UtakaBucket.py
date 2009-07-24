@@ -9,6 +9,7 @@ Created on Jul 21, 2009
 
 from mod_python import apache
 import xml.dom.minidom
+import utaka.src.core.Bucket as Bucket
 
 class UtakaBucket:
 
@@ -20,37 +21,26 @@ class UtakaBucket:
 
 		if 'acl' in self.utakaReq.subresources:
 			if self.utakaReq.req.method == 'GET':
-				operation = __getAclOperation()
+				operation = self.__getAclOperation
 			elif self.utakaReq.req.method == 'PUT':
-				operation = __putAclOperation()
+				operation = self.__putAclOperation
 		elif 'logging' in self.utakaReq.subresources:
 			if self.utakaReq.req.method == 'GET':
-				operation = __getLoggingOperation()
+				operation = self.__getLoggingOperation
 			elif self.utakaReq.req.method == 'PUT':
-				operation = __putLoggingOperation()
+				operation = self.__putLoggingOperation
 		elif self.utakaReq.req.method == 'GET':
-			operation = __getOperation()
+			operation = self.__getOperation
 		elif self.utakaReq.req.method == 'PUT':
-			operation = __putOperation()
+			operation = self.__putOperation
 		elif self.utakaReq.req.method == 'DELETE':
-			operation = __deleteOperation()
+			operation = self.__deleteOperation
 		elif self.utakaReq.req.method == 'POST':
-			operation = __postOperation()
+			operation = self.__postOperation
 		elif self.utakaReq.req.method == 'COPY':
-			operation = __copyOperation()
+			operation = self.__copyOperation
 
 		return operation()
-				#RETURN XML, SET HEADERS
-			elif self.utakaReq.method == 'PUT':
-				res = setBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user)
-				#SET HEADERS
-			elif self.utakaReq.req.method == 'DELETE':
-				res = destroyBucket(bucket=self.utakaReq.bucket, user=self.utakaReq.user)
-				#SET HEADERS
-			elif self.utakaReq.req.method == 'POST':
-				'''POST'''
-			elif self.utakaReq.req.method == 'COPY':
-				'''COPY'''
 
 
 	def __copyOperation(self):
@@ -62,11 +52,11 @@ class UtakaBucket:
 
 
 	def __deleteOperation(self):
-		result = destroyBucket(bucket=self.utakaReq.bucket, user=self.utakaReq.user)
+		result = Bucket.destroyBucket(bucket=self.utakaReq.bucket, userId=self.utakaReq.user)
 
 
 	def __putOperation(self):
-		result = setBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user)
+		result = Bucket.setBucket(bucket = self.utakaReq.bucket, userId = self.utakaReq.user)
 
 
 	def __getOperation(self):
@@ -74,10 +64,12 @@ class UtakaBucket:
 		for param in 'prefix', 'marker', 'max-keys', 'delimiter':
 			if param in self.utakaReq.subresources:
 				getBucketParams[param] = self.utakaReq.subresources[param]
-		res = getBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user,
+		res = Bucket.getBucket(bucket = self.utakaReq.bucket, userId = self.utakaReq.user,
 					prefix = getBucketParams.get('prefix'), marker = getBucketParams.get('marker'),
 					maxKeys = getBucketParams.get('max-keys'), delimiter = getBucketParams.get('delimiter'))
-
+		getBucketParams['isTruncated'] = str(res[2])
+		self.utakaReq.req.content_type = 'application/xml'
+		self.utakaReq.write(self.__getBucketXMLResponse(getBucketParams, res[0], res[1]))
 
 	def __putLoggingOperation(self):
 		pass
@@ -100,21 +92,25 @@ class UtakaBucket:
 		doc = xml.dom.minidom.Document()
 
 		nameEl = doc.createElement("Name")
-		nameEl.appendChild(bucketDictionary.get('name'))
+		nameEl.appendChild(doc.createTextNode(bucketDictionary['name']))
 
 		prefixEl = doc.createElement("Prefix")
-		prefixEl.appendChild(doc.createTextNode(bucketDictionary.get('prefix', '')))
+		if 'prefix' in bucketDictionary:
+			prefixEl.appendChild(doc.createTextNode(bucketDictionary['prefix']))
 
 		markerEl = doc.createElement("Marker")
-		markerEl.appendChild(doc.createTextNode(bucketDictionary.get('marker', '')))
+		if 'marker' in bucketDictionary:
+			markerEl.appendChild(doc.createTextNode(bucketDictionary['marker']))
 
 		maxkeysEl = doc.createElement("MaxKeys")
-		maxkeysEl.appendChild(doc.createTextNode(bucketDictionary.get('maxKeys', '')))
+		if 'maxKeys' in bucketDictionary:
+			maxkeysEl.appendChild(doc.createTextNode(bucketDictionary['maxKeys']))
 
 		truncatedEl= doc.createElement("IsTruncated")
-		truncatedEl.appendChild(doc.createTextNode(bucketDictionary.get('isTruncated', '')))
+		truncatedEl.appendChild(doc.createTextNode(bucketDictionary['isTruncated']))
 
 		contentsEl = doc.createElement("Contents")
+		commonPrefixesEl = None
 		for val in contentDictionaryList:
 			keyEl = doc.createElement("Key")
 			keyEl.appendChild(doc.createTextNode(val['key']))

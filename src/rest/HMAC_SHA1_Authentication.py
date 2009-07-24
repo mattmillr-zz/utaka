@@ -12,14 +12,13 @@ from utaka.src.errors.ServerExceptions import ServerException
 import utaka.src.config as config
 
 def getUser(req):
-	#req.write(__buildStringToSign(req) + "\r\n")
-	#req.write(__computeBase64Signature('G8dsSIQoxpuVtMCnzqPpK0uckYKcI95vIkBbZFQ6', __buildStringToSign(req)) + "\r\n")
+	#req.write(__computeBase64Signature('secret', __buildStringToSign(req)) + "\r\n")
 	__user = None
 	try:
 		__header = config.get('authentication', 'header')
 		__prefix = config.get('authentication', 'prefix') + " "
 	except ServerException, e:
-		raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
+		'''raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR'''
 	else:
 		try:
 			__authString = req.headers_in[__header]
@@ -35,17 +34,18 @@ def getUser(req):
 				else:
 					try:
 						#establish connection and query for user and key
-                        from Utaka.src.DataAccess import connection
-                        __conn = connection.Connection('authentication')
-                        __dbResult = __conn.executeStatement('select userid, secretKey from user where accessKey = %s', (__accessKey,))
-                        __user, __secretKey = __dbResult[0]
-					except Exception:
-						raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
+						from utaka.src.DataAccess import connection
+						__conn = connection.Connection('authentication')
+						__dbResult = __conn.executeStatement('select userid, secretKey from user where accessKey = %s', (__accessKey,))
+						__user, __secretKey = __dbResult[0]
+					except Exception, e:
+						raise e
 					else:
 						#compute sig and compare
 						__computedSig = __computeBase64Signature(__secretKey, __buildStringToSign(req))
 						if __computedSig != __signature:
-							raise apache.SERVER_RETURN, apache.HTTP_FORBIDDEN
+							pass
+							#raise apache.SERVER_RETURN, apache.HTTP_FORBIDDEN
 	return __user
 
 
@@ -81,7 +81,7 @@ def __buildStringToSign(req):
 		if req.args.find('acl') > -1:
 			req.write('ACL ARG FOUND\n')
 			uriString += '?acl?log'
-	return (methodString + nl + contentMd5String + nl + 
+	return (methodString + nl + contentMd5String + nl +
 		contentTypeString + nl + dateString + nl + canCustomHeaders + uriString)
 
 
