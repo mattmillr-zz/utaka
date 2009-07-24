@@ -7,7 +7,7 @@ Created on Jul 10, 2009
 
 
 
-import errors.UtakaErrors.UtakaError as UtakaError
+from utaka.src.errors.UtakaErrors import UtakaError
 
 class UtakaDataAccessError(UtakaError):
     def __init__(self, msg):

@@ -35,14 +35,10 @@ def getUser(req):
 				else:
 					try:
 						#establish connection and query for user and key
-						__host = config.get('authentication', 'mysql_hostname')
-						__user = config.get('authentication', 'mysql_username')
-						__upw = config.get('authentication', 'mysql_password')
-						__db = config.get('authentication', 'mysql_database')
-						from Utaka.DataAccess import connection
-						__conn = connection.Connection(__host, __user, __upw, __db)
-						__dbResult = __conn.executeStatement('select userid, secretKey from user where accessKey = %s', (__accessKey,))
-						__user, __secretKey = __dbResult[0]
+                        from Utaka.src.DataAccess import connection
+                        __conn = connection.Connection('authentication')
+                        __dbResult = __conn.executeStatement('select userid, secretKey from user where accessKey = %s', (__accessKey,))
+                        __user, __secretKey = __dbResult[0]
 					except Exception:
 						raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
 					else:
