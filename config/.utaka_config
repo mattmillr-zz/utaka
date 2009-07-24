@@ -1,6 +1,6 @@
 [common]
 
-#package_base_path : /var/lib/html/Utaka/
+#package_base_path : /var/lib/html/utaka/
 customHeaderPrefix : x-hisg-
 subresource : acl,location,logging,torrent
 filesystem_path : /UtakaFiles/

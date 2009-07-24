@@ -4,7 +4,7 @@ Created on Jul 21, 2009
 @author: Andrew
 '''
 import MySQLdb
-import Utaka.src.config as config
+import utaka.src.config as config
 
 class Connection:
 

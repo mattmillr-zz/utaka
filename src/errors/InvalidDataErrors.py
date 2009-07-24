@@ -4,7 +4,7 @@ Created on Jul 10, 2009
 @author: Andrew
 '''
 
-from Utaka.src.errors.UtakaErrors import UtakaError
+from utaka.src.errors.UtakaErrors import UtakaError
 
 class UtakaInvalidDataError(UtakaError):
     def __init__(self, msg):

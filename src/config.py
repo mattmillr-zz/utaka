@@ -5,9 +5,9 @@ Created on Jul 22, 2009
 '''
 
 import ConfigParser
-from Utaka.src.errors.ServerExceptions import ServerException
+from utaka.src.errors.ServerExceptions import ServerException
 
-configFile = "/var/www/html/Utaka/.utaka_config"
+configFile = "/var/www/html/utaka/config/.utaka_config"
 
 config = ConfigParser.ConfigParser()
 

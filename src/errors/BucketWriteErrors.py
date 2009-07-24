@@ -1,4 +1,4 @@
-from Utaka.src.errors.UtakaErrors import UtakaError
+from utaka.src.errors.UtakaErrors import UtakaError
 
 class BucketWriteError(UtakaError):
     def __init__(self, msg):
