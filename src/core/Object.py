@@ -10,6 +10,7 @@ from utaka.src.errors.InvalidDataErrors import *
 from utaka.src.core.Bucket import _verifyBucket
 import utaka.src.config as config
 import hashlib
+import errno
 import md5
 import time
 import os
@@ -44,12 +45,9 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     throws:
         InvalidKeyName
         InvalidBucketName
-        InvalidUserName
         BucketNotFound
         UserNotFound
         KeyNotFound
-        InvalidArgument?
-        InvalidRange
         PreconditionFailed
     """
     #Check for user
@@ -113,7 +111,7 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 data = fileReader.read()
         
         fileReader.close()
-        print data
+        #print data
         
         if content_range.has_key('start'):
             content_range['string'] = str(content_range['start'])+"-"+str(content_range['end'])+"/"+str(content_range['total'])
@@ -158,7 +156,6 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     throws:
         InvalidKeyName
         InvalidBucketName
-        InvalidUserName
         BucketNotFound
         UserNotFound
     """
@@ -204,7 +201,7 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     
     #Build metadata query
     metadataQuery = ""
-    if metadata != None:
+    if metadata != None and metadata != {}:
         metadataQuery = "INSERT INTO object_metadata (bucket, object, type, value) VALUES ("+"'" 
         for tag, value in metadata.iteritems():
             if type(value) == str or type(value) == unicode:
@@ -221,8 +218,13 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
             hashString = result[0][0]
             path = config.get('common','filesystem_path')
             path += str(bucket)
-            path += "/"+hashString[0:3]+"/"+hashString[3:6]+"/"+hashString[6:9]+"/"+hashString
-            os.remove(path)
+            path += "/"+hashString[0:3]+"/"+hashString[3:6]+"/"+hashString[6:9]
+            os.remove(path+"/"+hashString)
+            try:
+                os.removedirs(path)
+            except OSError, e:
+                if e.errno != errno.ENOTEMPTY:
+                    raise e
             hashString = str(hashfield.hexdigest())
             query = "UPDATE object SET userid = %s, hashfield = %s, eTag = %s, object_mod_time = NOW(), size = %s, content_type = %s, content_encoding = %s, content_disposition = %s WHERE bucket = %s AND object = %s"
             conn.executeStatement(query, (int(userId), hashString, str(myMD5.hexdigest()), int(size), escape_string(str(content_type)), escape_string(str(content_encoding)), escape_string(str(content_disposition)), escape_string(str(bucket)), escape_string(str(key))))
@@ -248,32 +250,41 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     
     return content_type, str(myMD5.hexdigest())
 
-def cloneObject():
+def cloneObject(userId, sourceBucket, sourceKey, destinationBucket, destinationKey, metadata = None, ifMatch = None, ifNotMatch = None, ifModifiedSince = None, ifNotModifiedSince = None):
     """
     params:
         str sourceKey
         str sourceBucket
         str destinationKey
         str destinationBucket
-        str user
+        int userId
         dict metadata - optional
-        dict preconditions:
-            str ifMatchTag
-            str ifNotMatchTag
-            str ifModifiedSinceDate
-            str ifNotModifiedSinceDate
+        str ifMatch - optional
+        str ifNotMatch - optional    
+        datetime ifModifiedSince - optional
+        datetime ifNotModifiedSince - optional
     throws:
         InvalidKeyName
         InvalidBucketName
-        InvalidUserName
         KeyNotFound
         BucketNotFound
         UserNotFound
         PreconditionFailed        
     """
-    pass
+    original = getObject(userId, sourceBucket, sourceKey, True, True, None, None, ifMatch, ifNotMatch, ifModifiedSince, ifNotModifiedSince)
+    if metadata != None:
+        original['metadata'] = metadata
+    if original.has_key('content-disposition'):
+        content_disposition = original('content-disposition')
+    else:
+        content_disposition = None
+    if original.has_key('content-encoding'):
+        content_encoding = original['content-encoding']
+    else:
+        content_encoding = None
+    return setObject(userId, destinationBucket, destinationKey, original['metadata'], original['data'], original['eTag'], original['content-type'], content_disposition, content_encoding)
 
-def destroyObject():
+def destroyObject(userId, bucket, key):
     """
     params:
         str key
@@ -287,7 +298,42 @@ def destroyObject():
         BucketNotFound
         UserNotFound
     """
-    pass
+    #Check for user
+    conn = Connection()
+    query = "SELECT COUNT(*) FROM user WHERE userid = %s"
+    count = conn.executeStatement(query, (int(userId)))[0][0]
+    if count == 0:
+        raise UtakaDataAccessError("UserNotFound")
+    
+    #Validate the bucket
+    _verifyBucket(conn, bucket, True)
+    
+    #Check for object and get information from database
+    query = "SELECT hashfield FROM object WHERE bucket = %s AND object = %s"
+    result = conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
+    if len(result) == 0:
+        raise UtakaDataAccessError("KeyNotFound")
+    
+    #Delete the object from the database and the filesystem
+    try:
+        query = "DELETE FROM object_metadata WHERE bucket = %s AND object = %s"
+        conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
+        query = "DELETE FROM object WHERE bucket = %s AND object = %s"
+        conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
+        hashString = result[0][0]
+        path = config.get('common','filesystem_path')
+        path += str(bucket)
+        path += "/"+hashString[0:3]+"/"+hashString[3:6]+"/"+hashString[6:9]
+        os.remove(path+"/"+hashString)
+        try:
+            os.removedirs(path)
+        except OSError, e:
+            if e.errno != errno.ENOTEMPTY:
+                raise e
+    except:
+        conn.cancelAndClose()
+        raise ObjectWriteError("An error occured when deleting the object.")
+    conn.close()
 
 def _passPrecondition(eTag, objectModTime, ifMatch, ifNotMatch, ifModifiedSince, ifNotModifiedSince, ifRange):
     import re
@@ -308,8 +354,11 @@ def _passPrecondition(eTag, objectModTime, ifMatch, ifNotMatch, ifModifiedSince,
         
 
 if __name__ == '__main__':
-    #setObject(3, 'billt.test', '/setTest1.txt', {'unicode':u'¥É∫'}, u"This is a üñîçø∂é test!")
+    #setObject(3, 'billt.test', '/setTest1.txt', {'unicode':u'¥É∫'}, "This is a üñîçø∂é test!")
     #getObject(3, 'billt.test', '/setTest.txt', None, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, 4, 10, None, None, None, None, None)
+    #destroyObject(3, 'billt.test', '/setTest1.txt')
+    #destroyObject(3, 'billt.test', '/Still Alive.mp3.bak')
+    cloneObject(3, 'billt.test', '/Still Alive.mp3', 'billt.test', '/Still Alive.mp3.bak', None, '01f4f497a00b333f082edd205104de20')
     

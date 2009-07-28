@@ -206,11 +206,8 @@ def destroyBucket(bucket, userId):
     query = "DELETE FROM bucket WHERE bucket = %s"
     try:
         conn.executeStatement(query, (escape_string(str(bucket))))
-    except:
-        raise BucketWriteError("An error occured when deleting the bucket.")
-    path = config.get('common','filesystem_path')
-    path += str(bucket)
-    try:
+        path = config.get('common','filesystem_path')
+        path += str(bucket)
         os.rmdir(path)
     except:
         conn.cancelAndClose()
@@ -253,6 +250,11 @@ def _isValidBucketName(bucketName):
     return valid, rule
 
 if __name__ == '__main__':
+    print "\n"
+    try:
+        print setBucket('bil\nlt', 3) #true
+    except Exception, e:
+        print str(e)
     """print "\n"
     try:
         print setBucket('billt', 3) #true
