@@ -18,7 +18,7 @@ CREATE TABLE bucket (
 	userid BIGINT UNSIGNED NOT NULL,
 	bucket VARCHAR(32) PRIMARY KEY NOT NULL,
 	bucket_creation_time DATETIME,
-	FOREIGN KEY (userid) REFERENCES user(userid)	
+	FOREIGN KEY (userid) REFERENCES user(userid)
 ) ENGINE=InnoDB;
 
 CREATE TABLE object (
@@ -33,43 +33,31 @@ CREATE TABLE object (
 	PRIMARY KEY(object, bucket),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket)
-) ENGINE=InnoDB;	
-
-CREATE TABLE permission (
-	permid SERIAL PRIMARY KEY,
-	description VARCHAR(64) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
-
-insert into permission(description) values('read');
-insert into permission(description) values('write');
-insert into permission(description) values('read_acp');
-insert into permission(description) values('write_acp');
 
 CREATE TABLE bucket_permission (
 	userid BIGINT UNSIGNED NOT NULL,
 	bucket VARCHAR(32) NOT NULL,
-	permid BIGINT UNSIGNED NOT NULL,
-	PRIMARY KEY(userid, bucket, permid),
+	permission ENUM('read', 'write', 'read_acp', 'write_acp') NOT NULL,
+	PRIMARY KEY(userid, bucket, permission),
 	FOREIGN KEY(userid) REFERENCES user(userid),
-	FOREIGN KEY(bucket) REFERENCES bucket(bucket),
-	FOREIGN KEY(permid) REFERENCES permission(permid)
+	FOREIGN KEY(bucket) REFERENCES bucket(bucket)
 ) ENGINE=InnoDB;
 
-CREATE INDEX bucketPermIndex ON bucket_permission(userid, bucket);
+#CREATE INDEX bucketPermIndex ON bucket_permission(userid, bucket);
 
 CREATE TABLE object_permission (
 	userid BIGINT UNSIGNED NOT NULL,
 	bucket VARCHAR(32) NOT NULL,
 	object VARCHAR(64) NOT NULL,
-	permid BIGINT UNSIGNED NOT NULL,
-	PRIMARY KEY(userid, bucket, object, permid),
+	permission ENUM('read', 'read_acp', 'write_acp') NOT NULL,
+	PRIMARY KEY(userid, bucket, object, permission),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket),
-	FOREIGN KEY(object) REFERENCES object(object),
-	FOREIGN KEY(permid) REFERENCES permission(permid)
+	FOREIGN KEY(object) REFERENCES object(object)
 ) ENGINE=InnoDB;
 
-CREATE INDEX objectPermIndex ON object_permission(userid, bucket, object);
+#CREATE INDEX objectPermIndex ON object_permission(userid, bucket, object);
 
 CREATE TABLE object_metadata (
 	bucket VARCHAR(32) NOT NULL,
@@ -80,5 +68,5 @@ CREATE TABLE object_metadata (
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket),
 	FOREIGN KEY(object) REFERENCES object(object)
 ) ENGINE=InnoDB;
-	
-CREATE INDEX objectDataIndex ON object_metadata(bucket, object);
+
+#CREATE INDEX objectDataIndex ON object_metadata(bucket, object);

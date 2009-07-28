@@ -4,6 +4,11 @@ Created on Jul 21, 2009
 @author: Andrew
 '''
 
+import utaka.src.core.Object as Object
+import utaka.src.accessControl.ObjectACP as ObjectACP
+import xml.dom.minidom
+
+
 class UtakaObject:
 
 	def __init__(self, utakaReq):
@@ -17,7 +22,7 @@ class UtakaObject:
 			elif self.utakaReq.req.method == 'PUT':
 				operation = self.__putAclOperation
 			else:
-				#raise error
+				'''raise error'''
 		elif self.utakaReq.req.method == 'GET':
 			operation = self.__getOperation
 		elif self.utakaReq.req.method == 'PUT':
@@ -35,7 +40,11 @@ class UtakaObject:
 
 
 	def __getAclOperation(self):
-		pass
+		object_acp = ObjectACP.getObjectACP(key = self.utakaReq.key, bucket = self.utakaReq.bucket)
+		if len(object_acp) == 0:
+			'''object not found, throw error'''
+		else:
+			self.utakaReq.write(self.__getAclXMLResponse(object_acp))
 
 
 	def __putAclOperation(self):
@@ -54,7 +63,7 @@ class UtakaObject:
 			skey = srcUriDigestResult['key']
 			sbucket = srcUriDigestResult['bucket']
 		else:
-			#raise error
+			'''incorrect args, raise error'''
 		metadataDirective = self.utakaReq.customHeadersTable('metadata-directive', 'COPY')
 		metadata = None
 		if metadataDirective == 'REPLACE':
@@ -64,9 +73,9 @@ class UtakaObject:
 					metadata[val.lower()[len('meta-'):]] = self.utakaReq.customHeaders[val]
 		elif metadataDirective == 'COPY':
 			if skey == self.utakaReq.key:
-				#raise error
+				'''cannot copy same object unless directive set to replace, raise error'''
 		else:
-			#raise error
+			'''directive must be copy or replace, raise error'''
 		result = cloneObject( user = self.utakaReq.user, sourceKey = skey,
 			sourceBucket = sbucket, destinationKey = self.utakaReq.key,
 			destinationBucket = self.utaka.bucket, metadata = metadata,
@@ -77,8 +86,8 @@ class UtakaObject:
 
 
 	def __getOperation(self):
-		startRange, endRange = __digestRange()
-		result = getObject( user = self.utakaReq.user,
+		startRange, endRange = self.__digestRange()
+		result = Object.getObject( userId = self.utakaReq.user,
 			bucket=self.utakaReq.bucket, key=self.utakaReq.key,
 			byteRangeStart = startRange, byteRangeEnd = endRange,
 			ifModifiedSince=self.utakaReq.req.headers_in.get('if-modified-since'),
@@ -96,7 +105,7 @@ class UtakaObject:
 			contentDisposition = self.utakaReq.req.headers_in.get('content-disposition'),
 			contentEncoding = self.utakaReq.req.headers_in.get('content-encoding'),
 			contentType = self.utakaReq.req.headers_in.get('content-type'),
-			contentLength = self.utakaReq.req.headers_in.get('content-length')
+			contentLength = self.utakaReq.req.headers_in.get('content-length'),
 			metadata = self.utakaReq.customMetadata,
 			acl = self.utakaReq.customAcl,
 			data = self.utakaReq.req.read())
@@ -130,4 +139,46 @@ class UtakaObject:
 				endRange = int(endRange)
 			else:
 				'''raise exception'''
-		return int(startRange), int(endRange)
+		return startRange, endRange
+		
+	def __getAclXMLResponse(self, object_acp):
+		doc = xml.dom.minidom.Document()
+		
+		oidEl = doc.createElement("ID")
+		oidEl.appendChild(doc.createTextNode(str(object_acp[0]['userid'])))
+		
+		onameEl = doc.createElement("DisplayName")
+		onameEl.appendChild(doc.createTextNode(object_acp[0]['username']))
+		
+		ownerEl = doc.createElement("Owner")
+		ownerEl.appendChild(oidEl)
+		ownerEl.appendChild(onameEl)
+		
+		aclEl = doc.createElement("AccessControlList")
+		for row in object_acp[1:]:
+		
+			gidEl = doc.createElement("ID")
+			gidEl.appendChild(doc.createTextNode(str(row['userid'])))
+			
+			gnameEl= doc.createElement("DisplayName")
+			gnameEl.appendChild(doc.createTextNode(row['username']))
+			
+			granteeEl = doc.createElement("Grantee")
+			granteeEl.setAttribute("type", "CanonicalUser")
+			granteeEl.appendChild(gidEl)
+			granteeEl.appendChild(gnameEl)
+			
+			permissionEl = doc.createElement("Permission")
+			permissionEl.appendChild(doc.createElement(row['permission'].upper()))
+			
+			grantEl = doc.createElement("Grant")
+			grantEl.appendChild(granteeEl)
+			grantEl.appendChild(permissionEl)
+			
+			aclEl.appendChild(grantEl)
+			
+		acpEl = doc.createElement("AccessControlPolicy")
+		acpEl.appendChild(ownerEl)
+		acpEl.appendChild(aclEl)
+		doc.appendChild(acpEl)
+		return doc.toxml('utf-8')

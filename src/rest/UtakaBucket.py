@@ -9,7 +9,8 @@ Created on Jul 21, 2009
 
 from mod_python import apache
 import xml.dom.minidom
-import utaka.src.core.Bucket as Bucket
+import utaka.src.core.BucketWithACPAndLog as Bucket
+import utaka.src.accessControl.BucketACP as BucketACP
 
 class UtakaBucket:
 
@@ -52,11 +53,11 @@ class UtakaBucket:
 
 
 	def __deleteOperation(self):
-		result = Bucket.destroyBucket(bucket=self.utakaReq.bucket, userId=self.utakaReq.user)
+		result = Bucket.destroyBucket(bucket=self.utakaReq.bucket, user=self.utakaReq.user)
 
 
 	def __putOperation(self):
-		result = Bucket.setBucket(bucket = self.utakaReq.bucket, userId = self.utakaReq.user)
+		result = Bucket.setBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user)
 
 
 	def __getOperation(self):
@@ -64,31 +65,85 @@ class UtakaBucket:
 		for param in 'prefix', 'marker', 'max-keys', 'delimiter':
 			if param in self.utakaReq.subresources:
 				getBucketParams[param] = self.utakaReq.subresources[param]
-		res = Bucket.getBucket(bucket = self.utakaReq.bucket, userId = self.utakaReq.user,
+		res = Bucket.getBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user,
 					prefix = getBucketParams.get('prefix'), marker = getBucketParams.get('marker'),
 					maxKeys = getBucketParams.get('max-keys'), delimiter = getBucketParams.get('delimiter'))
 		getBucketParams['isTruncated'] = str(res[2])
-		self.utakaReq.req.content_type = 'application/xml'
-		self.utakaReq.write(self.__getBucketXMLResponse(getBucketParams, res[0], res[1]))
+		self.utakaReq.write(self.__getXMLResponse(getBucketParams, res[0], res[1]))
 
 	def __putLoggingOperation(self):
 		pass
 
 
 	def __getLoggingOperation(self):
-		pass
+		Bucket.getBucketLogStatus(user=self.utakaReq.user, bucket=self.utakaReq.bucket)
+
 
 
 	def __putAclOperation(self):
+		#READ BODY
+		acl = self.__getAclFromXMLRequest()
+		Bucket.putBucketACP(user=self.utakaReq.user, bucket=self.utakaReq.bucket, accessControlList=acl)
 		pass
 
 
 	def __getAclOperation(self):
-		pass
+		bucket_acp = Bucket.getBucketACP(bucket=self.utakaReq.bucket, user=self.utakaReq.user)
+		if len(bucket_acp) == 0:
+			'''bucket not found, throw error'''
+		else:
+			self.utakaReq.write(self.__getAclXMLResponse(bucket_acp))
+
+	def __getAclFromXMLRequest(self):
+		dom = xml.dom.minidom.parseString(self.utakaReq.req.read())
+		dom.getElementsByTagName(
 
 
-	def __getBucketXMLResponse(self, bucketDictionary, contentDictionaryList, commonPrefixesList):
-		import xml.dom.minidom
+
+	def __getAclXMLResponse(self, bucket_acp):
+		doc = xml.dom.minidom.Document()
+
+		oidEl = doc.createElement("ID")
+		oidEl.appendChild(doc.createTextNode(str(bucket_acp[0]['userid'])))
+
+		onameEl = doc.createElement("DisplayName")
+		onameEl.appendChild(doc.createTextNode(bucket_acp[0]['username']))
+
+		ownerEl = doc.createElement("Owner")
+		ownerEl.appendChild(oidEl)
+		ownerEl.appendChild(onameEl)
+
+		aclEl = doc.createElement("AccessControlList")
+		for row in bucket_acp[1:]:
+
+			gidEl = doc.createElement("ID")
+			gidEl.appendChild(doc.createTextNode(str(row['userid'])))
+
+			gnameEl= doc.createElement("DisplayName")
+			gnameEl.appendChild(doc.createTextNode(row['username']))
+
+			granteeEl = doc.createElement("Grantee")
+			granteeEl.setAttribute("type", "CanonicalUser")
+			granteeEl.appendChild(gidEl)
+			granteeEl.appendChild(gnameEl)
+
+			permissionEl = doc.createElement("Permission")
+			permissionEl.appendChild(doc.createElement(row['permission'].upper()))
+
+			grantEl = doc.createElement("Grant")
+			grantEl.appendChild(granteeEl)
+			grantEl.appendChild(permissionEl)
+
+			aclEl.appendChild(grantEl)
+
+		acpEl = doc.createElement("AccessControlPolicy")
+		acpEl.appendChild(ownerEl)
+		acpEl.appendChild(aclEl)
+		doc.appendChild(acpEl)
+		return doc.toxml('utf-8')
+
+
+	def __getXMLResponse(self, bucketDictionary, contentDictionaryList, commonPrefixesList):
 		doc = xml.dom.minidom.Document()
 
 		nameEl = doc.createElement("Name")
