@@ -50,7 +50,7 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimiter):
     result = conn.executeStatement(query, (int(userId)))
     if len(result) == 0:
         raise UtakaDataAccessError("UserNotFound")
-    
+        
     #get objects
     group = False
     if prefix != None:
@@ -68,26 +68,26 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimiter):
         query += " AND o.object LIKE %s"
     else:
         query = "SELECT o.userid, o.object, o.bucket, o.object_create_time, o.eTag, o.object_mod_time, o.size, u.username, 1 FROM object as o, user as u WHERE o.bucket = %s AND o.userid = u.userid"
-    
+        
     if marker != None:
         marker = escape_string(str(marker))
         query += " AND STRCMP(o.object, '"+marker+"') > 0"
-    
+        
     if group == True:
         query += queryGroup
     else:
         query += " ORDER BY o.object"
-    
-    if int(maxKeys) > -1:
+        
+    if maxKeys and int(maxKeys) > -1:
         query += " LIMIT "+str(int(maxKeys))
-    
+        
     if prefix != None:
         print (query % ("'%s'", "'%s'")) % (escape_string(str(bucket)), prefix)
         result = conn.executeStatement(query, (escape_string(str(bucket)), prefix))
     else:
         print (query % ("'%s'")) % (escape_string(str(bucket)))
         result = conn.executeStatement(query, (escape_string(str(bucket))))
-    
+        
     contents = []
     commonPrefixes = []
     for row in result:
@@ -100,14 +100,14 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimiter):
                             'owner':{'id':int(row[0]), 'name':unicode(row[7], encoding='utf8')}})
         else:
             commonPrefixes.append(str(row[9]))
-    
+            
     query = "SELECT COUNT(*) FROM object WHERE bucket = %s"
     count = conn.executeStatement(query, (escape_string(str(bucket))))[0][0]
     if count > len(contents):
         isTruncated = True
     else:
         isTruncated = False
-    
+        
     conn.close()
     
     return (contents, commonPrefixes, isTruncated)
@@ -138,13 +138,13 @@ def setBucket(bucket, userId):
     result = conn.executeStatement(query, (int(userId)))
     if len(result) == 0:
         raise UtakaDataAccessError("UserNotFound")
-    
+        
     #Check if user has too many buckets
     query = "SELECT bucket FROM bucket WHERE userid = %s"
     result = conn.executeStatement(query, (int(userId)))
     if len(result) >= MAX_BUCKETS_PER_USER:
         raise BucketWriteError("TooManyBuckets: You have reached the maximum number of buckets allowed per user.")
-    
+        
     #Write bucket to database and filesystem
     query = "INSERT INTO bucket (bucket, userid, bucket_creation_time) VALUES (%s, %s, NOW())"
     try:
@@ -171,17 +171,12 @@ def cloneBucket():
         BucketNotFound
         InvalidUserName
         UserNotFound
-        TooManyBuckets        
+        TooManyBuckets
     """
     pass
 
-
-
-
-
-
-def destroyBucket(bucket, userId):    
-    """ 
+def destroyBucket(bucket, userId):
+    """
     params:
         str bucket
         int userId

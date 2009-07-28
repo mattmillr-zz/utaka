@@ -1,15 +1,15 @@
 [common]
 
 #package_base_path : /var/lib/html/utaka/
-customHeaderPrefix : x-hisg-
-subresource : acl,location,logging,torrent
-filesystem_path : /UtakaFiles/
+customHeaderPrefix : x-amz-
+subresource : acl,logging
+filesystem_path : /var/www/html/utaka/files/
 
 [database]
 
 mysql_utaka_hostname : localhost
-mysql_utaka_username : utakaUser
-mysql_utaka_password : utakaPw
+mysql_utaka_username : root
+mysql_utaka_password : aburke
 mysql_utaka_database : utaka
 
 mysql_acp_hostname : localhost
@@ -20,7 +20,7 @@ mysql_acp_database : utaka
 [authentication]
 
 header : Authorization
-prefix : HISG
+prefix : AWS
 mysql_hostname : localhost
 mysql_username : root
 mysql_password : aburke
