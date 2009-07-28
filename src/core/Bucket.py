@@ -6,13 +6,13 @@ Created on Jul 8, 2009
 
 from MySQLdb import escape_string
 from utaka.src.DataAccess.connection import Connection
-from utaka.src.errors.BucketWriteErrors import BucketWriteError
+from utaka.src.errors.WriteErrors import BucketWriteError
 from utaka.src.errors.DataAccessErrors import UtakaDataAccessError
 from utaka.src.errors.InvalidDataErrors import *
 import utaka.src.config as config
 import os
 
-def getBucket(bucket, userId, prefix, marker, maxKeys, delimeter):
+def getBucket(bucket, userId, prefix, marker, maxKeys, delimiter):
     """
     params:
         str bucket
@@ -20,7 +20,7 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimeter):
         str prefix
         str marker
         int maxKeys
-        str delimeter
+        str delimiter
     returns:
         tuple
             list contents
@@ -41,17 +41,9 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimeter):
         UserNotFound
         InvalidArgument
     """
-    #Check is the bucket name is valid
-    (valid, rule) = _isValidBucketName(bucket)
-    if valid == False:
-        raise UtakaInvalidBucketError(rule)
-    
-    #Check if the bucket already exists
     conn = Connection()
-    query = "SELECT userid FROM bucket WHERE bucket = %s"
-    result = conn.executeStatement(query, (escape_string(str(bucket))))
-    if len(result) == 0:
-        raise UtakaDataAccessError("BucketNotFound")
+    #Validate the bucket
+    _verifyBucket(conn, bucket, True)
     
     #Check if userid exists
     query = "SELECT username FROM user WHERE userid = %s"
@@ -62,12 +54,12 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimeter):
     #get objects
     group = False
     if prefix != None:
-        if delimeter != None and delimeter != "":
-            delimeter = escape_string(str(delimeter))
-            count = prefix.count(delimeter) + 1
-            queryGroup = " GROUP BY SUBSTRING_INDEX(o.object, '"+delimeter+"', "+str(count)+")"
+        if delimiter != None and delimiter != "":
+            delimiter = escape_string(str(delimiter))
+            count = prefix.count(delimiter) + 1
+            queryGroup = " GROUP BY SUBSTRING_INDEX(o.object, '"+delimiter+"', "+str(count)+")"
             group = True
-            query = "SELECT o.userid, o.object, o.bucket, o.object_create_time, o.eTag, o.object_mod_time, o.size, u.username, COUNT(*), CONCAT(SUBSTRING_INDEX(o.object, '"+delimeter+"', "+str(count)+"), '"+delimeter+"') FROM object as o, user as u WHERE o.bucket = %s AND o.userid = u.userid"
+            query = "SELECT o.userid, o.object, o.bucket, o.object_create_time, o.eTag, o.object_mod_time, o.size, u.username, COUNT(*), CONCAT(SUBSTRING_INDEX(o.object, '"+delimiter+"', "+str(count)+"), '"+delimiter+"') FROM object as o, user as u WHERE o.bucket = %s AND o.userid = u.userid"
         else:
             query = "SELECT o.userid, o.object, o.bucket, o.object_create_time, o.eTag, o.object_mod_time, o.size, u.username, 1 FROM object as o, user as u WHERE o.bucket = %s AND o.userid = u.userid"
         prefix = escape_string(str(prefix))
@@ -137,20 +129,9 @@ def setBucket(bucket, userId):
     """
     MAX_BUCKETS_PER_USER = 100
     
-    #Check is the bucket name is valid
-    (valid, rule) = _isValidBucketName(bucket)
-    if valid == False:
-        raise UtakaInvalidBucketError(rule)
-    
-    #Check if the bucket already exists
     conn = Connection()
-    query = "SELECT userid FROM bucket WHERE bucket = %s"
-    result = conn.executeStatement(query, (escape_string(str(bucket))))
-    if len(result) > 0:
-        if int(result[0][0]) == int(userId):
-            raise BucketWriteError("BucketExistsByUser: You already created a bucket with that name.")
-        else:
-            raise BucketWriteError("BucketExists: That bucket already exists.")
+    #Validate the bucket
+    _verifyBucket(conn, bucket, False)
     
     #Check if userid exists
     query = "SELECT username FROM user WHERE userid = %s"
@@ -210,17 +191,9 @@ def destroyBucket(bucket, userId):
         BucketNotEmpty
         UserNotFound
     """
-    #Check is the bucket name is valid
-    (valid, rule) = _isValidBucketName(bucket)
-    if valid == False:
-        raise UtakaInvalidBucketError(rule)
-    
-    #Check if the bucket already exists
     conn = Connection()
-    query = "SELECT userid FROM bucket WHERE bucket = %s"
-    result = conn.executeStatement(query, (escape_string(str(bucket))))
-    if len(result) == 0:
-        raise UtakaDataAccessError("BucketNotFound")
+    #Validate the bucket
+    _verifyBucket(conn, bucket, True)
     
     #Check if userid exists
     query = "SELECT username FROM user WHERE userid = %s"
@@ -228,13 +201,13 @@ def destroyBucket(bucket, userId):
     if len(result) == 0:
         raise UtakaDataAccessError("UserNotFound")
     
-    #Check if userid exists
+    #Check if the bucket is empty
     query = "SELECT COUNT(*) FROM object WHERE bucket = %s"
     result = conn.executeStatement(query, (escape_string(str(bucket))))
     if result[0][0] > 0:
         raise BucketWriteError("BucketNotEmpty")
     
-    #Write bucket to database and filesystem
+    #Delete bucket from database and filesystem
     query = "DELETE FROM bucket WHERE bucket = %s"
     try:
         conn.executeStatement(query, (escape_string(str(bucket))))
@@ -248,6 +221,23 @@ def destroyBucket(bucket, userId):
         conn.cancelAndClose()
         raise BucketWriteError("An error occured when deleting the bucket.")
     conn.close()
+
+def _verifyBucket(conn, bucketName, exists):    
+    #Check is the bucket name is valid
+    (valid, rule) = _isValidBucketName(bucketName)
+    if valid == False:
+        raise UtakaInvalidBucketError(rule)
+    
+    #Check whether or not the bucket exists
+    query = "SELECT userid FROM bucket WHERE bucket = %s"
+    result = conn.executeStatement(query, (escape_string(str(bucketName))))
+    if len(result) > 0 and exists == False:
+        if int(result[0][0]) == int(userId):
+            raise BucketWriteError("BucketExistsByUser: You already created a bucket with that name.")
+        else:
+            raise BucketWriteError("BucketExists: That bucket already exists.")
+    if len(result) == 0 and exists == True:
+        raise UtakaDataAccessError("BucketNotFound")
 
 def _isValidBucketName(bucketName):
     import re
@@ -268,7 +258,7 @@ def _isValidBucketName(bucketName):
     return valid, rule
 
 if __name__ == '__main__':
-    print "\n"
+    """print "\n"
     try:
         print setBucket('billt', 3) #true
     except Exception, e:
@@ -368,4 +358,4 @@ if __name__ == '__main__':
         print destroyBucket('b-t.test', 3) #true
     except Exception, e:
         print str(e)
-    print "\n"
+    print "\n" """

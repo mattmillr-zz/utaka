@@ -21,13 +21,17 @@ CREATE TABLE bucket (
 ) ENGINE=InnoDB;
 
 CREATE TABLE object (
-   userid BIGINT UNSIGNED NOT NULL,
+	userid BIGINT UNSIGNED NOT NULL,
 	object VARCHAR(64) NOT NULL,
 	bucket VARCHAR(32) NOT NULL,
 	hashfield blob,
 	object_create_time DATETIME,
 	eTag VARCHAR(32),
 	object_mod_time DATETIME,
+	size BIGINT UNSIGNED,
+	content_type VARCHAR(32) DEFAULT 'binary/octet-stream',
+	content_disposition VARCHAR(64),
+	content_encoding VARCHAR(32),
 	PRIMARY KEY(object, bucket),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket)
