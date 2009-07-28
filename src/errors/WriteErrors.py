@@ -4,3 +4,8 @@ class BucketWriteError(UtakaError):
     def __init__(self, msg):
         msg = "BucketWriteError: " + msg
         UtakaError.__init__(self, msg)
+
+class ObjectWriteError(UtakaError):
+    def __init__(self, msg):
+        msg = "ObjectWriteError: " + msg
+        UtakaError.__init__(self, msg)
