@@ -43,9 +43,11 @@ def getBucket(bucket, userId, prefix, marker, maxKeys, delimiter):
     """
     conn = Connection()
     #Validate the bucket
-    _verifyBucket(conn, bucket, True)
+    _verifyBucket(conn, bucket, userId, True)
     
     #Check if userid exists
+    if not userId:
+      userId = 1
     query = "SELECT username FROM user WHERE userid = %s"
     result = conn.executeStatement(query, (int(userId)))
     if len(result) == 0:
@@ -131,7 +133,7 @@ def setBucket(bucket, userId):
     
     conn = Connection()
     #Validate the bucket
-    _verifyBucket(conn, bucket, False)
+    _verifyBucket(conn, bucket, userId, False)
     
     #Check if userid exists
     query = "SELECT username FROM user WHERE userid = %s"
@@ -188,7 +190,7 @@ def destroyBucket(bucket, userId):
     """
     conn = Connection()
     #Validate the bucket
-    _verifyBucket(conn, bucket, True)
+    _verifyBucket(conn, bucket, userId, True)
     
     #Check if userid exists
     query = "SELECT username FROM user WHERE userid = %s"
@@ -217,11 +219,11 @@ def destroyBucket(bucket, userId):
         raise BucketWriteError("An error occured when deleting the bucket.")
     conn.close()
 
-def _verifyBucket(conn, bucketName, exists):    
+def _verifyBucket(conn, bucketName, userId, exists):    
     #Check is the bucket name is valid
     (valid, rule) = _isValidBucketName(bucketName)
     if valid == False:
-        raise UtakaInvalidBucketError(rule)
+        raise UtakaInvalidBucketError("(" + bucketName + ")" + rule)
     
     #Check whether or not the bucket exists
     query = "SELECT userid FROM bucket WHERE bucket = %s"

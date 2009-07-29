@@ -22,7 +22,7 @@ class UtakaRequest:
 	def __init__(self, req, virtualBucket=False):
 
 		self.req = req
-		self.bucket = self.key = None
+		self.bucket = self.key = self.user = self.accesskey = self.signature = self.stringToSign = None
 		self.subresources = {}
 		self.__writeBuffer = ''
 
@@ -57,8 +57,9 @@ class UtakaRequest:
 				
 		#authenticate -- must happen after custom header table is created
 		self.accesskey, self.signature = self.__getAccessKeyAndSignature()
-		self.stringToSign = self.__buildStringToSign()
-		self.user, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
+		if self.accesskey and self.signature:
+			self.stringToSign = self.__buildStringToSign()
+			self.user, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
 
 		#Check date
 		#check customDateHeader then date header
@@ -73,7 +74,7 @@ class UtakaRequest:
 		self.__writeBuffer += msg
 
 	def send(self):
-		self.req.content_type = 'application/xml'
+		#self.req.content_type = 'application/xml'
 		self.req.set_content_length(len(self.__writeBuffer))
 		self.req.write(self.__writeBuffer)
 		
@@ -102,13 +103,13 @@ class UtakaRequest:
 		__customHeaderPrefix = config.get('common', 'customHeaderPrefix').lower()
 		__customDateHeader = __customHeaderPrefix + "-date"
 
-		canCustomHeaders = ''
 		customHeaderList = []
+		canCustomHeaders = ''
 
-		for val in self.req.headers_in.keys():
-			if val.lower().startswith(__customHeaderPrefix):
-				customHeaderList.insert(val.lower() + ':' + self.req.headers_in[val].lstrip() + nl)
-				if val.lower() == __customDateHeader:
+		for tag, val in self.customHeaderTable.iteritems():
+			#self.req.write(tag + ":" + value + "\r\n")
+			customHeaderList.append(self.customHeaderPrefix + tag + ":" + val.lstrip() + nl)
+			if val == 'date':
 					dateString = ''
 		customHeaderList.sort()
 		for val in customHeaderList:
@@ -117,9 +118,9 @@ class UtakaRequest:
 		#Canoicalize URI
 		uriString = self.req.uri
 		for val in ('acl',):
-			self.write("CHECKING FOR ACL\r\n")
+			#self.write("CHECKING FOR ACL\r\n")
 			if val in self.subresources:
-				self.write("FOUND ACL\r\n")
+				#self.write("FOUND ACL\r\n")
 				uriString += '?' + val
 		return (methodString + nl + contentMd5String + nl +
 			contentTypeString + nl + dateString + nl + canCustomHeaders + uriString)

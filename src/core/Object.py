@@ -32,10 +32,12 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     returns:
         dict
             str key
-            str etag
+            dict owner - userId, username
+            str eTag
             str lastModified
             dict metadata - conditional
             str data - conditional
+            str size
             str content-type
             str content-encoding - conditional
             str content-disposition - conditional
@@ -54,13 +56,15 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     """
     #Check for user
     conn = Connection()
+    if not userId:
+      userId = 1
     query = "SELECT username FROM user WHERE userid = %s"
     result = conn.executeStatement(query, (int(userId)))
     if len(result) == 0:
         raise UtakaDataAccessError("UserNotFound")
     
     #Validate the bucket
-    _verifyBucket(conn, bucket, True)
+    _verifyBucket(conn, bucket, userId, True)
     
     #Check for object and get information from database
     query = "SELECT o.object, o.bucket, o.hashfield, o.object_create_time, o.eTag, o.object_mod_time, o.size, o.content_type, o.content_encoding, o.content_disposition, o.userid, u.username FROM object as o, user as u WHERE o.bucket = %s AND o.object = %s AND o.userid = u.userid"
@@ -69,9 +73,10 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
         raise UtakaDataAccessError("KeyNotFound")
     result = result[0]
     
-    if _passPrecondition(str(result[4]), str(result[5]), str(ifMatch), str(ifNotMatch), str(ifModifiedSince), str(ifNotModifiedSince), str(ifRange)) == False:
-        byteRangeStart = None
-        byteRangeEnd = None
+
+    #if _passPrecondition(str(result[4]), str(result[5]), str(ifMatch), str(ifNotMatch), str(ifModifiedSince), str(ifNotModifiedSince), str(ifRange)) == False:
+    #    byteRangeStart = None
+    #    byteRangeEnd = None
         
     
     #Get metadata from database
@@ -170,7 +175,7 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
         raise UtakaDataAccessError("UserNotFound")
     
     #Validate the bucket
-    _verifyBucket(conn, bucket, True)
+    _verifyBucket(conn, bucket, userId, True)
     
     #Check for object and get information from database
     myMD5 = md5.new(data)
@@ -204,7 +209,7 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     
     #Build metadata query
     metadataQuery = ""
-    if metadata != None:
+    if metadata:
         metadataQuery = "INSERT INTO object_metadata (bucket, object, type, value) VALUES ("+"'" 
         for tag, value in metadata.iteritems():
             if type(value) == str or type(value) == unicode:
@@ -241,9 +246,9 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
         fileReader = open(path, 'wb')
         fileReader.write(data)
         fileReader.close()
-    except:
+    except Exception, e:
         conn.cancelAndClose()
-        raise ObjectWriteError("An error occured when creating the object.")
+        raise e
     conn.close()
     
     return content_type, str(myMD5.hexdigest())
@@ -308,8 +313,8 @@ def _passPrecondition(eTag, objectModTime, ifMatch, ifNotMatch, ifModifiedSince,
         
 
 if __name__ == '__main__':
+    pass
     #setObject(3, 'billt.test', '/setTest1.txt', {'unicode':u'¥É∫'}, u"This is a üñîçø∂é test!")
     #getObject(3, 'billt.test', '/setTest.txt', None, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, 4, 10, None, None, None, None, None)
-    

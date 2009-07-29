@@ -13,6 +13,8 @@ CREATE TABLE user (
 insert into user(username, accesskey, secretkey) values('UTAKA_ALL_USERS', '', '');
 insert into user(username, accesskey, secretkey) values('UTAKA_AUTHENTICATED_USERS', null, null);
 insert into user(username, accesskey, secretkey) values('andrew', 'access', 'secret');
+insert into user(username, accesskey, secretkey) values('s3', '0RSHVZKB35P0XEBKXBR2', 'G8dsSIQoxpuVtMCnzqPpK0uckYKcI95vIkBbZFQ6');
+insert into user(username, accesskey, secretkey) values('miller', 'millerAccess', 'millerSecret');
 
 CREATE TABLE bucket (
 	userid BIGINT UNSIGNED NOT NULL,
@@ -41,7 +43,7 @@ CREATE TABLE object (
 CREATE TABLE bucket_permission (
 	userid BIGINT UNSIGNED NOT NULL,
 	bucket VARCHAR(32) NOT NULL,
-	permission ENUM('read', 'write', 'read_acp', 'write_acp') NOT NULL,
+	permission ENUM('read', 'write', 'read_acp', 'write_acp', 'full_control') NOT NULL,
 	PRIMARY KEY(userid, bucket, permission),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket)
@@ -53,7 +55,7 @@ CREATE TABLE object_permission (
 	userid BIGINT UNSIGNED NOT NULL,
 	bucket VARCHAR(32) NOT NULL,
 	object VARCHAR(64) NOT NULL,
-	permission ENUM('read', 'read_acp', 'write_acp') NOT NULL,
+	permission ENUM('read', 'write', 'read_acp', 'write_acp', 'full_control') NOT NULL,
 	PRIMARY KEY(userid, bucket, object, permission),
 	FOREIGN KEY(userid) REFERENCES user(userid),
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket),

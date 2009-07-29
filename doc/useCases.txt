@@ -1,0 +1,56 @@
+use cases
+
+bucket:
+	owner:
+		get
+		put
+		head
+		delete
+		get acp
+		put acp
+	auth user:
+		get
+		put
+		head
+		delete
+		get acp
+		put acp
+	annon:
+		get
+		put
+		head
+		delete
+		get acp
+		put acp
+		
+service:
+	auth user:
+		get
+	annon:
+		get
+		
+object:
+	owner:
+		get
+		put
+		head
+		delete
+		copy
+		get acp
+		put acp
+	auth user:
+		get
+		put
+		head
+		delete
+		copy
+		get acp
+		put acp
+	annon:
+		get
+		put
+		head
+		delete
+		copy
+		get acp
+		put acp

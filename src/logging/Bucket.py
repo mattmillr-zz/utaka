@@ -32,5 +32,5 @@ def getBucketLogStatus(bucket):
         UserNotFound
     """
 
-def logEvent(bucket, user, action):
+def logEvent(bucket, user, action, key=None):
 	pass

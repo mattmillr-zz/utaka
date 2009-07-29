@@ -57,7 +57,21 @@ class UtakaBucket:
 
 
 	def __putOperation(self):
-		result = Bucket.setBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user)
+		cannedACL = self.utakaReq.customHeaderTable.get('acl', 'private')
+		acp = {}
+		acp['owner'] = {'userid':self.utakaReq.user}
+		acl = [{'grantee':{'userid':self.utakaReq.user}, 'permission':'FULL_CONTROL'}]
+		if cannedACL == 'public-read':
+			acl.append({'grantee':{'userid':1}, 'permission':'read'})
+		elif cannedACL == 'public-read-write':
+			acl.append({'grantee':{'userid':1}, 'permission':'read'})
+			acl.append({'grantee':{'userid':1}, 'permission':'write'})
+		elif cannedACL == 'authenticated-read':
+			acl.append({'grantee':{'userid':2}, 'permission':'read'})
+		elif cannedACL != 'private':
+			'''throw error'''
+		acp['acl'] = acl
+		result = Bucket.setBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user, accessControlPolicy = acp)
 
 
 	def __getOperation(self):
@@ -69,6 +83,7 @@ class UtakaBucket:
 					prefix = getBucketParams.get('prefix'), marker = getBucketParams.get('marker'),
 					maxKeys = getBucketParams.get('max-keys'), delimiter = getBucketParams.get('delimiter'))
 		getBucketParams['isTruncated'] = str(res[2])
+		self.utakaReq.req.content_type = 'application/xml'
 		self.utakaReq.write(self.__getXMLResponse(getBucketParams, res[0], res[1]))
 
 	def __putLoggingOperation(self):
@@ -96,7 +111,6 @@ class UtakaBucket:
 
 	def __getAclFromXMLRequest(self):
 		dom = xml.dom.minidom.parseString(self.utakaReq.req.read())
-		dom.getElementsByTagName(
 
 
 
@@ -128,7 +142,7 @@ class UtakaBucket:
 			granteeEl.appendChild(gnameEl)
 
 			permissionEl = doc.createElement("Permission")
-			permissionEl.appendChild(doc.createElement(row['permission'].upper()))
+			permissionEl.appendChild(doc.createTextNode(row['permission'].upper()))
 
 			grantEl = doc.createElement("Grant")
 			grantEl.appendChild(granteeEl)
@@ -177,14 +191,14 @@ class UtakaBucket:
 			eTagEl.appendChild(doc.createTextNode(val['eTag']))
 
 			sizeEl = doc.createElement("Size")
-			sizeEl.appendChild(doc.createTextNode(val['size']))
+			sizeEl.appendChild(doc.createTextNode(str(val['size'])))
 
 			storageClassEl = doc.createElement("StorageClass")
 			storageClassEl.appendChild(doc.createTextNode("STANDARD"))
 
 			ownerEl = doc.createElement("Owner")
 			ownerIdEl = doc.createElement("ID")
-			ownerIdEl.appendChild(doc.createTextNode(val['owner']['id']))
+			ownerIdEl.appendChild(doc.createTextNode(str(val['owner']['id'])))
 			ownerNameEl = doc.createElement("DisplayName")
 			ownerNameEl.appendChild(doc.createTextNode(val['owner']['name']))
 			ownerEl.appendChild(ownerIdEl)
