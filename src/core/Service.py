@@ -101,11 +101,59 @@ def copyService():
 def destroyService():
     """
     parameters:
-        str user
+        int userId
     throws
         InvalidUserName
         UserNotFound
     """
+    #Check if user exists
+    conn = Connection()
+    query = "SELECT COUNT(*) FROM user WHERE userid = %s"
+    count = conn.executeStatement(query, (int(userId)))[0]
+    if count == 0:
+        raise UtakaDataAccessError("UserNotFound")
+    
+    #Give ownership of existing objects to enclosing bucket owners
+    try:
+        query = "SELECT bucket, object FROM object WHERE userid = %s"
+        result = conn.executeStatement(query, (int(userId)))
+        query = "UPDATE object SET userid = (SELECT userid FROM bucket WHERE bucket = %s) WHERE bucket = %s AND object = %s"
+        for row in result:
+            conn.executeStatement(query, (escape_string(str(row[0])), escape_string(str(row[0])), escape_string(str(row[1]))))
+    except, Exception e:
+        conn.cancelAndClose()
+        raise UserWriteError("An error occured when deleting the user: "+str(e))
+    
+    #Check if user still has objects
+    query = "SELECT COUNT(*) FROM object WHERE userid = %s"
+    count = conn.executeStatement(query, (int(userId)))[0]
+    if count > 0:
+        raise UserWriteError("User still has objects.")
+    
+    #Check if user still has buckets
+    query = "SELECT COUNT(*) FROM bucket WHERE userid = %s"
+    count = conn.executeStatement(query, (int(userId)))[0]
+    if count > 0:
+        raise UserWriteError("User still has buckets.")
+    
+    #Delete permissions pertaining to user
+    try:
+        query = "DELETE FROM object_permission WHERE userid = %s"
+        conn.executeStatement(query, (int(userId)))
+        query = "DELETE FROM object_permission WHERE userid = %s"
+        conn.executeStatement(query, (int(userId)))
+    except Exception, e:
+        conn.cancelAndClose()
+        raise UserWriteError("An error occured when deleting the user: "+str(e))
+    
+    #Delete user
+    try:
+        query = "DELETE FROM user WHERE userid = %s"
+        conn.executeStatement(query, (int(userId)))
+    except Exception, e:
+        conn.cancelAndClose()
+        raise UserWriteError("An error occured when deleting the user: "+str(e))
+    conn.close()
 
 if __name__ == '__main__':
     print getService(3)

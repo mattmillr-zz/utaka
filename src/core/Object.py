@@ -359,11 +359,12 @@ def _passPrecondition(eTag, objectModTime, ifMatch, ifNotMatch, ifModifiedSince,
         
 
 if __name__ == '__main__':
+    #setObject(3, 'billt.test', '/setTest1.txt', {}, "This is a test!")
     #setObject(3, 'billt.test', '/setTest1.txt', {'unicode':u'¥É∫'}, "This is a üñîçø∂é test!")
     #getObject(3, 'billt.test', '/setTest.txt', None, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, 4, 10, None, None, None, None, None)
     #destroyObject(3, 'billt.test', '/setTest1.txt')
     #destroyObject(3, 'billt.test', '/Still Alive.mp3.bak')
-    cloneObject(3, 'billt.test', '/Still Alive.mp3', 'billt.test', '/Still Alive.mp3.bak', None, '01f4f497a00b333f082edd205104de20')
+    #cloneObject(3, 'billt.test', '/Still Alive.mp3', 'billt.test', '/Still Alive.mp3.bak', None, '01f4f497a00b333f082edd205104de20')
     
