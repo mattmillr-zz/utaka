@@ -202,7 +202,7 @@ def destroyBucket(bucket, userId):
     if result[0][0] > 0:
         raise BucketWriteError("BucketNotEmpty")
     
-    #Delete bucket from database and filesystem
+    #Delete the bucket from the database and the filesystem
     query = "DELETE FROM bucket WHERE bucket = %s"
     try:
         conn.executeStatement(query, (escape_string(str(bucket))))

@@ -7,6 +7,9 @@ Created on Jul 8, 2009
 from MySQLdb import escape_string
 from utaka.src.DataAccess.connection import Connection
 from utaka.src.errors.DataAccessErrors import UtakaDataAccessError
+from utaka.src.errors.WriteErrors import UserWriteError
+import hashlib
+import time
 
 def getService(userId):
     """
@@ -42,15 +45,47 @@ def getService(userId):
                         'creationDate':str(bucket[1])})
     return {'user':{'userId':userId,'username':username},'buckets':buckets}
 
-def setService():
+def setService(newUsername):
     """
     parameters:
-        str user
+        str newUsername
     throws
         InvalidUserName
-        UserNameTaken
-    """    
-
+    """
+    conn = Connection()
+    access = hashlib.sha1()
+    secret = hashlib.sha1()
+    access.update(str(newUsername))
+    access.update(str(time.time()))
+    secret.update(str(newUsername))
+    success = False
+    for i in range(3):
+        access.update(str(secret.hexdigest()))
+        access.update(str(time.time()))
+        secret.update(str(time.time()))
+        query = "SELECT COUNT(*) FROM user WHERE accesskey = %s OR secretkey = %s"
+        count = conn.executeStatement(query, (str(access.hexdigest()), str(secret.hexdigest())))[0]
+        if count == 0 and secret.hexdigest() != access.hexdigest():
+            success = True
+            break;
+    
+    if not success:
+        raise UserWriteError("Unable to find unique authentication keys.")
+    
+    try:
+        newUsername = unicode(escape_string(newUsername.encode('utf8')))
+    except:
+        newUsername = escape_string(str(newUsername))
+    
+    try:
+        query = "INSERT INTO user (username, accesskey, secretkey) VALUES (%s, %s, %s)"
+        conn.executeStatement(query, (newUsername, escape_string(str(access.hexdigest())), escape_string(str(secret.hexdigest()))))
+    except:
+        conn.cancelAndClose()
+        raise UserWriteError("An error occured when creating the user.")
+    
+    conn.close()
+    return (str(access.hexdigest()), str(secret.hexdigest()))
 
 def copyService():
     """

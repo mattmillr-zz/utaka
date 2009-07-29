@@ -79,7 +79,8 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     for tag in metadata:
         metadataDict[str(tag[0])] = unicode(tag[1], encoding='utf8')
     
-    content_range = {}    
+    content_range = {}
+    size = 0
     hashfield = str(result[2])
     if getData:
         #Get data from filesystem and build content_range
@@ -96,10 +97,12 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 content_range['end'] = fileReader.tell()
                 fileReader.read()
                 content_range['total'] = fileReader.tell()
+                size = byteRangeEnd-byteRangeStart
             else:
                 data = fileReader.read()
                 content_range['end'] = fileReader.tell()
                 content_range['total'] = fileReader.tell()
+                size = content_range['total']
         else:
             if byteRangeEnd != None:
                 content_range['start'] = 0
@@ -107,8 +110,10 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 content_range['end'] = fileReader.tell()
                 fileReader.read()
                 content_range['total'] = fileReader.tell()
+                size = byteRangeEnd
             else:
                 data = fileReader.read()
+                size = fileReader.tell()
         
         fileReader.close()
         #print data
@@ -122,7 +127,7 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 'creationTime':str(result[3]),
                 'eTag':str(result[4]),
                 'lastModified':str(result[5]),
-                'size':int(result[6]),
+                'size':size,
                 'content-type':str(result[7]),
                 'owner':{'id':int(result[10]), 'name':unicode(result[11], encoding='utf8')}}
     if str(result[8]) != "" and result[8] != None:
