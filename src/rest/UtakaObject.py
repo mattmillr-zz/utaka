@@ -49,7 +49,7 @@ class UtakaObject:
 
 	def __getAclOperation(self):
 		object_acp = Object.getObjectACP(self.utakaReq.user, self.utakaReq.bucket, self.utakaReq.key)
-		if len(object_acp) == 0:
+		if not object_acp:
 			'''object not found, throw error'''
 		else:
 			self.utakaReq.req.content_type = 'application/xml'

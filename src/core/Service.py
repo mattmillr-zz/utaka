@@ -128,7 +128,7 @@ def destroyService():
         query = "UPDATE object SET userid = (SELECT userid FROM bucket WHERE bucket = %s) WHERE bucket = %s AND object = %s"
         for row in result:
             conn.executeStatement(query, (escape_string(str(row[0])), escape_string(str(row[0])), escape_string(str(row[1]))))
-    except, Exception e:
+    except Exception, e:
         conn.cancelAndClose()
         raise UserWriteError("An error occured when deleting the user: "+str(e))
     

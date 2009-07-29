@@ -92,11 +92,11 @@ def checkUserPermission(user, bucket, key, action):
 	elif action in('write'):
 		conn = Connection()
 		if user:
-			result = conn.executeStatement('''SELECT SUM( (SELECT COUNT(*) FROM bucket_permission where userid IN(2, %s) and bucket = %s and permission IN('write', 'full_control')
-			          + (SELECT COUNT(*) FROM object_permission where userid IN(2, %s) and bucket = %s and object = %s and permission IN('write', 'full_control'))''', (user, bucket, user, bucket, object))
+			result = conn.executeStatement('''SELECT SUM( (SELECT COUNT(*) FROM bucket_permission where userid IN(2, %s) and bucket = %s and permission IN('write', 'full_control'))
+			          + (SELECT COUNT(*) FROM object_permission where userid IN(2, %s) and bucket = %s and object = %s and permission IN('write', 'full_control')))''', (user, bucket, user, bucket, object))
 		else:
-			result = conn.executeStatement('''SELECT SUM( (SELECT COUNT(*) FROM bucket_permission where userid = 1 and bucket = %s and permission IN('write', 'full_control')
-			          + (SELECT COUNT(*) FROM object_permission where userid = 1 and bucket = %s and object = %s and permission IN('write', 'full_control'))''', (bucket, bucket, object))
+			result = conn.executeStatement('''SELECT SUM( (SELECT COUNT(*) FROM bucket_permission where userid = 1 and bucket = %s and permission IN('write', 'full_control'))
+			          + (SELECT COUNT(*) FROM object_permission where userid = 1 and bucket = %s and object = %s and permission IN('write', 'full_control')))''', (bucket, bucket, object))
 		conn.close()
 		return result[0][0] > 0
 	else:

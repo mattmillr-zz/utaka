@@ -27,9 +27,11 @@ CREATE TABLE user (
 
 insert into user(username, accesskey, secretkey) values('UTAKA_ALL_USERS', '', '');
 insert into user(username, accesskey, secretkey) values('UTAKA_AUTHENTICATED_USERS', null, null);
-insert into user(username, accesskey, secretkey) values('andrew', 'access', 'secret');
+insert into user(username, accesskey, secretkey) values('burke', 'burkeAccess', 'burkeSecret');
 insert into user(username, accesskey, secretkey) values('s3', '0RSHVZKB35P0XEBKXBR2', 'G8dsSIQoxpuVtMCnzqPpK0uckYKcI95vIkBbZFQ6');
 insert into user(username, accesskey, secretkey) values('miller', 'millerAccess', 'millerSecret');
+insert into user(username, accesskey, secretkey) values('tuscher', 'tuscherAccess', 'tuscherSecret');
+insert into user(username, accesskey, secretkey) values('jett', 'jettAccess', 'jettSecret');
 
 CREATE TABLE bucket (
 	userid BIGINT UNSIGNED NOT NULL,

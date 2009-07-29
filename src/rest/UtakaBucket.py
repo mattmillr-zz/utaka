@@ -16,6 +16,7 @@ from mod_python import apache
 import xml.dom.minidom
 import utaka.src.core.BucketWithACPAndLog as Bucket
 import utaka.src.accessControl.BucketACP as BucketACP
+import utaka.src.accessControl.AcpXml as AcpXml
 
 class UtakaBucket:
 
@@ -83,7 +84,9 @@ class UtakaBucket:
 		getBucketParams = {'name':self.utakaReq.bucket}
 		for param in 'prefix', 'marker', 'max-keys', 'delimiter':
 			if param in self.utakaReq.subresources:
-				getBucketParams[param] = self.utakaReq.subresources[param]
+				getBucketParams[param] = self.utakaReq.subresources[param][0]
+		if 'max-keys' not in getBucketParams:
+			getBucketParams['max-keys'] = 1000
 		res = Bucket.getBucket(bucket = self.utakaReq.bucket, user = self.utakaReq.user,
 					prefix = getBucketParams.get('prefix'), marker = getBucketParams.get('marker'),
 					maxKeys = getBucketParams.get('max-keys'), delimiter = getBucketParams.get('delimiter'))
@@ -102,8 +105,8 @@ class UtakaBucket:
 
 	def __putAclOperation(self):
 		#READ BODY
-		acl = self.__getAclFromXMLRequest()
-		Bucket.putBucketACP(user=self.utakaReq.user, bucket=self.utakaReq.bucket, accessControlList=acl)
+		acp = AcpXml.fromXML(self.utakaReq.req.read())
+		Bucket.putBucketACP(user=self.utakaReq.user, bucket=self.utakaReq.bucket, accessControlPolicy=acp)
 		pass
 
 
@@ -112,109 +115,62 @@ class UtakaBucket:
 		if len(bucket_acp) == 0:
 			'''bucket not found, throw error'''
 		else:
-			self.utakaReq.write(self.__getAclXMLResponse(bucket_acp))
-
-	def __getAclFromXMLRequest(self):
-		dom = xml.dom.minidom.parseString(self.utakaReq.req.read())
-
-
-
-	def __getAclXMLResponse(self, bucket_acp):
-		doc = xml.dom.minidom.Document()
-
-		oidEl = doc.createElement("ID")
-		oidEl.appendChild(doc.createTextNode(str(bucket_acp[0]['userid'])))
-
-		onameEl = doc.createElement("DisplayName")
-		onameEl.appendChild(doc.createTextNode(bucket_acp[0]['username']))
-
-		ownerEl = doc.createElement("Owner")
-		ownerEl.appendChild(oidEl)
-		ownerEl.appendChild(onameEl)
-
-		aclEl = doc.createElement("AccessControlList")
-		for row in bucket_acp[1:]:
-
-			gidEl = doc.createElement("ID")
-			gidEl.appendChild(doc.createTextNode(str(row['userid'])))
-
-			gnameEl= doc.createElement("DisplayName")
-			gnameEl.appendChild(doc.createTextNode(row['username']))
-
-			granteeEl = doc.createElement("Grantee")
-			granteeEl.setAttribute("type", "CanonicalUser")
-			granteeEl.appendChild(gidEl)
-			granteeEl.appendChild(gnameEl)
-
-			permissionEl = doc.createElement("Permission")
-			permissionEl.appendChild(doc.createTextNode(row['permission'].upper()))
-
-			grantEl = doc.createElement("Grant")
-			grantEl.appendChild(granteeEl)
-			grantEl.appendChild(permissionEl)
-
-			aclEl.appendChild(grantEl)
-
-		acpEl = doc.createElement("AccessControlPolicy")
-		acpEl.appendChild(ownerEl)
-		acpEl.appendChild(aclEl)
-		doc.appendChild(acpEl)
-		return doc.toxml('utf-8')
+			self.utakaReq.write(AcpXml.toXML(bucket_acp))
 
 
 	def __getXMLResponse(self, bucketDictionary, contentDictionaryList, commonPrefixesList):
 		doc = xml.dom.minidom.Document()
 
 		nameEl = doc.createElement("Name")
-		nameEl.appendChild(doc.createTextNode(bucketDictionary['name']))
+		nameEl.appendChild(doc.createTextNode(bucketDictionary.get('name')))
 
 		prefixEl = doc.createElement("Prefix")
-		if 'prefix' in bucketDictionary:
-			prefixEl.appendChild(doc.createTextNode(bucketDictionary['prefix']))
+		prefixEl.appendChild(doc.createTextNode(bucketDictionary.get('prefix', '')))
 
 		markerEl = doc.createElement("Marker")
-		if 'marker' in bucketDictionary:
-			markerEl.appendChild(doc.createTextNode(bucketDictionary['marker']))
+		markerEl.appendChild(doc.createTextNode(bucketDictionary.get('marker', '')))
 
 		maxkeysEl = doc.createElement("MaxKeys")
-		if 'maxKeys' in bucketDictionary:
-			maxkeysEl.appendChild(doc.createTextNode(bucketDictionary['maxKeys']))
+		maxkeysEl.appendChild(doc.createTextNode(str(bucketDictionary.get('max-keys', ''))))
 
 		truncatedEl= doc.createElement("IsTruncated")
-		truncatedEl.appendChild(doc.createTextNode(bucketDictionary['isTruncated']))
+		truncatedEl.appendChild(doc.createTextNode(bucketDictionary.get('isTruncated', '')))
 
-		contentsEl = doc.createElement("Contents")
+		
+		contentsEl = None
 		commonPrefixesEl = None
-		for val in contentDictionaryList:
-			keyEl = doc.createElement("Key")
-			keyEl.appendChild(doc.createTextNode(val['key']))
+		if contentDictionaryList:
+			contentsEl = doc.createElement("Contents")
+			for val in contentDictionaryList:
+				keyEl = doc.createElement("Key")
+				keyEl.appendChild(doc.createTextNode(val['key']))
 
-			lastModifiedEl = doc.createElement("LastModified")
-			lastModifiedEl.appendChild(doc.createTextNode(val['lastModified']))
+				lastModifiedEl = doc.createElement("LastModified")
+				lastModifiedEl.appendChild(doc.createTextNode(val['lastModified']))
 
-			eTagEl = doc.createElement("ETag")
-			eTagEl.appendChild(doc.createTextNode(val['eTag']))
+				eTagEl = doc.createElement("ETag")
+				eTagEl.appendChild(doc.createTextNode(val['eTag']))
 
-			sizeEl = doc.createElement("Size")
-			sizeEl.appendChild(doc.createTextNode(str(val['size'])))
+				sizeEl = doc.createElement("Size")
+				sizeEl.appendChild(doc.createTextNode(str(val['size'])))
 
-			storageClassEl = doc.createElement("StorageClass")
-			storageClassEl.appendChild(doc.createTextNode("STANDARD"))
+				storageClassEl = doc.createElement("StorageClass")
+				storageClassEl.appendChild(doc.createTextNode("STANDARD"))
 
-			ownerEl = doc.createElement("Owner")
-			ownerIdEl = doc.createElement("ID")
-			ownerIdEl.appendChild(doc.createTextNode(str(val['owner']['id'])))
-			ownerNameEl = doc.createElement("DisplayName")
-			ownerNameEl.appendChild(doc.createTextNode(val['owner']['name']))
-			ownerEl.appendChild(ownerIdEl)
-			ownerEl.appendChild(ownerNameEl)
+				ownerEl = doc.createElement("Owner")
+				ownerIdEl = doc.createElement("ID")
+				ownerIdEl.appendChild(doc.createTextNode(str(val['owner']['id'])))
+				ownerNameEl = doc.createElement("DisplayName")
+				ownerNameEl.appendChild(doc.createTextNode(val['owner']['name']))
+				ownerEl.appendChild(ownerIdEl)
+				ownerEl.appendChild(ownerNameEl)
 
-			contentsEl.appendChild(keyEl)
-			contentsEl.appendChild(lastModifiedEl)
-			contentsEl.appendChild(eTagEl)
-			contentsEl.appendChild(sizeEl)
-			contentsEl.appendChild(storageClassEl)
-			contentsEl.appendChild(ownerEl)
+				contentsEl.appendChild(keyEl)
+				contentsEl.appendChild(lastModifiedEl)
+				contentsEl.appendChild(eTagEl)
+				contentsEl.appendChild(sizeEl)
+				contentsEl.appendChild(storageClassEl)
+				contentsEl.appendChild(ownerEl)
 
 		if commonPrefixesList:
 			commonPrefixesEl = doc.createElement("CommonPrefixes")
@@ -229,7 +185,8 @@ class UtakaBucket:
 		listBucketEl.appendChild(markerEl)
 		listBucketEl.appendChild(maxkeysEl)
 		listBucketEl.appendChild(truncatedEl)
-		listBucketEl.appendChild(contentsEl)
+		if contentsEl:
+			listBucketEl.appendChild(contentsEl)
 		if commonPrefixesEl:
 			listBucketEl.appendChild(commonPrefixesEl)
 

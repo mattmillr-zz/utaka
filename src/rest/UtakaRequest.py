@@ -52,9 +52,19 @@ class UtakaRequest:
 					'''raise error'''
 
 		#URI digest
-		uriDigestResults = self.uriDigest(req.uri)
-		self.bucket = uriDigestResults.get('bucket')
-		self.key = uriDigestResults.get('key')
+		basehost = config.get('server', 'hostname')
+		if self.req.servername == basehost
+			uriDigestResults = self.uriDigest(req.uri)
+			self.bucket = uriDigestResults.get('bucket')
+			self.key = uriDigestResults.get('key')
+		else:
+			splitHost = self.req.servername.split("." + basehost)
+			if splitHost == 2:
+				uriDigestResult = self.uriDigest(splitHost[0] + '/' + req.uri)
+				self.bucket = riDigestResults.get('bucket')
+				self.key = uriDigestResults.get('key')
+			else:
+				'''throw error'''
 
 		#custom header table
 		try:
@@ -69,7 +79,7 @@ class UtakaRequest:
 				
 		#authenticate -- must happen after custom header table is created
 		self.accesskey, self.signature = self.__getAccessKeyAndSignature()
-		if self.accesskey and self.signature:
+		if self.accesskey:
 			self.stringToSign = self.__buildStringToSign()
 			self.user, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
 
@@ -143,7 +153,7 @@ class UtakaRequest:
 			header = config.get('authentication', 'header')
 			prefix = config.get('authentication', 'prefix') + ' '
 		except ServerException, e:
-			'''raise error'''
+			raise exception, e
 		else:
 			try:
 				authString = self.req.headers_in[header]
@@ -155,6 +165,6 @@ class UtakaRequest:
 					try:
 						accesskey, signature = splitAuth[1].split(':')
 					except ValueError, e:
-						'''raise error'''
+						raise exception, "BAD AUTH STRING"
 					else:
 						return accesskey, signature

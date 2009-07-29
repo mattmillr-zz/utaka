@@ -17,18 +17,22 @@
 #package_base_path : /var/lib/html/utaka/
 customHeaderPrefix : x-hisg-
 subresource : acl,location,logging,torrent
-filesystem_path : /UtakaFiles/
+filesystem_path : /var/www/html/utaka/files/
+
+[server]
+
+hostname : b.aburke.vv
 
 [database]
 
 mysql_utaka_hostname : localhost
-mysql_utaka_username : utakaUser
-mysql_utaka_password : utakaPw
+mysql_utaka_username : root
+mysql_utaka_password : aburke
 mysql_utaka_database : utaka
 
 mysql_acp_hostname : localhost
-mysql_acp_username : utakaUser
-mysql_acp_password : utakaPw
+mysql_acp_username : root
+mysql_acp_password : aburke
 mysql_acp_database : utaka
 
 [authentication]
