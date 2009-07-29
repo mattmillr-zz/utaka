@@ -1,6 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+#Copyright 2009 Humanitarian International Services Group
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from MySQLdb import escape_string
 from utaka.src.DataAccess.connection import Connection
 from utaka.src.errors.WriteErrors import ObjectWriteError
@@ -10,6 +24,7 @@ from utaka.src.errors.InvalidDataErrors import *
 from utaka.src.core.Bucket import _verifyBucket
 import utaka.src.config as config
 import hashlib
+import errno
 import md5
 import time
 import os
@@ -46,12 +61,9 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     throws:
         InvalidKeyName
         InvalidBucketName
-        InvalidUserName
         BucketNotFound
         UserNotFound
         KeyNotFound
-        InvalidArgument?
-        InvalidRange
         PreconditionFailed
     """
     #Check for user
@@ -86,7 +98,8 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     for tag in metadata:
         metadataDict[str(tag[0])] = unicode(tag[1], encoding='utf8')
     
-    content_range = {}    
+    content_range = {}
+    size = 0
     hashfield = str(result[2])
     if getData:
         #Get data from filesystem and build content_range
@@ -103,10 +116,12 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 content_range['end'] = fileReader.tell()
                 fileReader.read()
                 content_range['total'] = fileReader.tell()
+                size = byteRangeEnd-byteRangeStart
             else:
                 data = fileReader.read()
                 content_range['end'] = fileReader.tell()
                 content_range['total'] = fileReader.tell()
+                size = content_range['total']
         else:
             if byteRangeEnd != None:
                 content_range['start'] = 0
@@ -114,11 +129,13 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 content_range['end'] = fileReader.tell()
                 fileReader.read()
                 content_range['total'] = fileReader.tell()
+                size = byteRangeEnd
             else:
                 data = fileReader.read()
+                size = fileReader.tell()
         
         fileReader.close()
-        print data
+        #print data
         
         if content_range.has_key('start'):
             content_range['string'] = str(content_range['start'])+"-"+str(content_range['end'])+"/"+str(content_range['total'])
@@ -129,7 +146,7 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
                 'creationTime':str(result[3]),
                 'eTag':str(result[4]),
                 'lastModified':str(result[5]),
-                'size':int(result[6]),
+                'size':size,
                 'content-type':str(result[7]),
                 'owner':{'id':int(result[10]), 'name':unicode(result[11], encoding='utf8')}}
     if str(result[8]) != "" and result[8] != None:
@@ -163,7 +180,6 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     throws:
         InvalidKeyName
         InvalidBucketName
-        InvalidUserName
         BucketNotFound
         UserNotFound
     """
@@ -209,7 +225,7 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     
     #Build metadata query
     metadataQuery = ""
-    if metadata:
+    if metadata != None and metadata != {}:
         metadataQuery = "INSERT INTO object_metadata (bucket, object, type, value) VALUES ("+"'" 
         for tag, value in metadata.iteritems():
             if type(value) == str or type(value) == unicode:
@@ -226,8 +242,13 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
             hashString = result[0][0]
             path = config.get('common','filesystem_path')
             path += str(bucket)
-            path += "/"+hashString[0:3]+"/"+hashString[3:6]+"/"+hashString[6:9]+"/"+hashString
-            os.remove(path)
+            path += "/"+hashString[0:3]+"/"+hashString[3:6]+"/"+hashString[6:9]
+            os.remove(path+"/"+hashString)
+            try:
+                os.removedirs(path)
+            except OSError, e:
+                if e.errno != errno.ENOTEMPTY:
+                    raise e
             hashString = str(hashfield.hexdigest())
             query = "UPDATE object SET userid = %s, hashfield = %s, eTag = %s, object_mod_time = NOW(), size = %s, content_type = %s, content_encoding = %s, content_disposition = %s WHERE bucket = %s AND object = %s"
             conn.executeStatement(query, (int(userId), hashString, str(myMD5.hexdigest()), int(size), escape_string(str(content_type)), escape_string(str(content_encoding)), escape_string(str(content_disposition)), escape_string(str(bucket)), escape_string(str(key))))
@@ -253,32 +274,41 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
     
     return content_type, str(myMD5.hexdigest())
 
-def cloneObject():
+def cloneObject(userId, sourceBucket, sourceKey, destinationBucket, destinationKey, metadata = None, ifMatch = None, ifNotMatch = None, ifModifiedSince = None, ifNotModifiedSince = None):
     """
     params:
         str sourceKey
         str sourceBucket
         str destinationKey
         str destinationBucket
-        str user
+        int userId
         dict metadata - optional
-        dict preconditions:
-            str ifMatchTag
-            str ifNotMatchTag
-            str ifModifiedSinceDate
-            str ifNotModifiedSinceDate
+        str ifMatch - optional
+        str ifNotMatch - optional    
+        datetime ifModifiedSince - optional
+        datetime ifNotModifiedSince - optional
     throws:
         InvalidKeyName
         InvalidBucketName
-        InvalidUserName
         KeyNotFound
         BucketNotFound
         UserNotFound
         PreconditionFailed        
     """
-    pass
+    original = getObject(userId, sourceBucket, sourceKey, True, True, None, None, ifMatch, ifNotMatch, ifModifiedSince, ifNotModifiedSince)
+    if metadata != None:
+        original['metadata'] = metadata
+    if original.has_key('content-disposition'):
+        content_disposition = original('content-disposition')
+    else:
+        content_disposition = None
+    if original.has_key('content-encoding'):
+        content_encoding = original['content-encoding']
+    else:
+        content_encoding = None
+    return setObject(userId, destinationBucket, destinationKey, original['metadata'], original['data'], original['eTag'], original['content-type'], content_disposition, content_encoding)
 
-def destroyObject():
+def destroyObject(userId, bucket, key):
     """
     params:
         str key
@@ -292,7 +322,42 @@ def destroyObject():
         BucketNotFound
         UserNotFound
     """
-    pass
+    #Check for user
+    conn = Connection()
+    query = "SELECT COUNT(*) FROM user WHERE userid = %s"
+    count = conn.executeStatement(query, (int(userId)))[0][0]
+    if count == 0:
+        raise UtakaDataAccessError("UserNotFound")
+    
+    #Validate the bucket
+    _verifyBucket(conn, bucket, True)
+    
+    #Check for object and get information from database
+    query = "SELECT hashfield FROM object WHERE bucket = %s AND object = %s"
+    result = conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
+    if len(result) == 0:
+        raise UtakaDataAccessError("KeyNotFound")
+    
+    #Delete the object from the database and the filesystem
+    try:
+        query = "DELETE FROM object_metadata WHERE bucket = %s AND object = %s"
+        conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
+        query = "DELETE FROM object WHERE bucket = %s AND object = %s"
+        conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
+        hashString = result[0][0]
+        path = config.get('common','filesystem_path')
+        path += str(bucket)
+        path += "/"+hashString[0:3]+"/"+hashString[3:6]+"/"+hashString[6:9]
+        os.remove(path+"/"+hashString)
+        try:
+            os.removedirs(path)
+        except OSError, e:
+            if e.errno != errno.ENOTEMPTY:
+                raise e
+    except:
+        conn.cancelAndClose()
+        raise ObjectWriteError("An error occured when deleting the object.")
+    conn.close()
 
 def _passPrecondition(eTag, objectModTime, ifMatch, ifNotMatch, ifModifiedSince, ifNotModifiedSince, ifRange):
     import re
@@ -318,3 +383,11 @@ if __name__ == '__main__':
     #getObject(3, 'billt.test', '/setTest.txt', None, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, None, None, None, None, None, None, None)
     #print getObject(3, 'billt.test', '/setTest1.txt', True, True, 4, 10, None, None, None, None, None)
+    #setObject(3, 'billt.test', '/setTest1.txt', {}, "This is a test!")
+    #setObject(3, 'billt.test', '/setTest1.txt', {'unicode':u'¥É∫'}, "This is a üñîçø∂é test!")
+    #getObject(3, 'billt.test', '/setTest.txt', None, True, None, None, None, None, None, None, None)
+    #print getObject(3, 'billt.test', '/setTest1.txt', True, True, None, None, None, None, None, None, None)
+    #print getObject(3, 'billt.test', '/setTest1.txt', True, True, 4, 10, None, None, None, None, None)
+    #destroyObject(3, 'billt.test', '/setTest1.txt')
+    #destroyObject(3, 'billt.test', '/Still Alive.mp3.bak')
+    #cloneObject(3, 'billt.test', '/Still Alive.mp3', 'billt.test', '/Still Alive.mp3.bak', None, '01f4f497a00b333f082edd205104de20')

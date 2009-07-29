@@ -1,8 +1,16 @@
-'''
-Created on Jul 8, 2009
-
-@author: Andrew
-'''
+#Copyright 2009 Humanitarian International Services Group
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 
 from MySQLdb import escape_string
 from utaka.src.DataAccess.connection import Connection
@@ -204,15 +212,12 @@ def destroyBucket(bucket, userId):
     if result[0][0] > 0:
         raise BucketWriteError("BucketNotEmpty")
     
-    #Delete bucket from database and filesystem
+    #Delete the bucket from the database and the filesystem
     query = "DELETE FROM bucket WHERE bucket = %s"
     try:
         conn.executeStatement(query, (escape_string(str(bucket))))
-    except:
-        raise BucketWriteError("An error occured when deleting the bucket.")
-    path = config.get('common','filesystem_path')
-    path += str(bucket)
-    try:
+        path = config.get('common','filesystem_path')
+        path += str(bucket)
         os.rmdir(path)
     except:
         conn.cancelAndClose()
@@ -255,6 +260,11 @@ def _isValidBucketName(bucketName):
     return valid, rule
 
 if __name__ == '__main__':
+    print "\n"
+    try:
+        print setBucket('bil\nlt', 3) #true
+    except Exception, e:
+        print str(e)
     """print "\n"
     try:
         print setBucket('billt', 3) #true

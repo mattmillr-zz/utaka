@@ -1,15 +1,29 @@
+#Copyright 2009 Humanitarian International Services Group
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 [common]
 
 #package_base_path : /var/lib/html/utaka/
-customHeaderPrefix : x-amz-
-subresource : acl,logging
-filesystem_path : /var/www/html/utaka/files/
+customHeaderPrefix : x-hisg-
+subresource : acl,location,logging,torrent
+filesystem_path : /UtakaFiles/
 
 [database]
 
 mysql_utaka_hostname : localhost
-mysql_utaka_username : root
-mysql_utaka_password : aburke
+mysql_utaka_username : utakaUser
+mysql_utaka_password : utakaPw
 mysql_utaka_database : utaka
 
 mysql_acp_hostname : localhost
@@ -20,8 +34,8 @@ mysql_acp_database : utaka
 [authentication]
 
 header : Authorization
-prefix : AWS
+prefix : HISG
 mysql_hostname : localhost
 mysql_username : root
-mysql_password : aburke
+mysql_password : btuscher
 mysql_database : utaka

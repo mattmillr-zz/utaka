@@ -1,5 +1,24 @@
+#Copyright 2009 Humanitarian International Services Group
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+from mod_python import apache
+from mod_python import util
+from utaka.src.rest.HMAC_SHA1_Authentication import getUser
+import utaka.src.config as config
+
+
 '''
-Created on Jul 21, 2009
 UtakaRequest
 wraps an apache request
 adds:
@@ -9,14 +28,7 @@ adds:
 	subresources - dict of query string keys and vals
 	customHeaderPrefix -
 	customHeaderTable - dict of headers that began with the customHeaderPrefix, prefix has been stripped
-@author: Andrew
 '''
-
-from mod_python import apache
-from mod_python import util
-from utaka.src.rest.HMAC_SHA1_Authentication import getUser
-import utaka.src.config as config
-
 class UtakaRequest:
 
 	def __init__(self, req, virtualBucket=False):
