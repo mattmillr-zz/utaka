@@ -37,6 +37,7 @@ class UtakaRequest:
 		self.bucket = self.key = self.user = self.accesskey = self.signature = self.stringToSign = None
 		self.subresources = {}
 		self.__writeBuffer = ''
+		self.virtualBucket = False
 
 		#Query string digest
 		if self.req.args:
@@ -63,6 +64,7 @@ class UtakaRequest:
 				uriDigestResults = self.uriDigest(splitHost[0] + '/' + req.uri)
 				self.bucket = uriDigestResults.get('bucket')
 				self.key = uriDigestResults.get('key')
+				self.virtualBucket = True
 			else:
 				self.req.write("HOST: " + self.req.hostname + "\r\n")
 				raise Exception, 'wrong hostname?'
@@ -90,9 +92,9 @@ class UtakaRequest:
 		#check customDateHeader then date header
 
 		if 'signature' in self.subresources:
+			self.req.headers_out['Signature'] = self.computedSig
 			self.write(self.computedSig + "\r\n")
 			self.write(self.stringToSign + "\r\n")
-			self.write(str(self.subresources) + "\r\n")
 			self.send()
 
 	def write(self, msg):
@@ -141,8 +143,12 @@ class UtakaRequest:
 			canCustomHeaders += val
 
 		#Canoicalize URI
-		uriString = self.req.uri
-		for val in ('acl',):
+		import urllib
+		uriString = ""
+		if self.virtualBucket:
+			uriString = "/" + urllib.quote(self.bucket)
+		uriString += (self.req.unparsed_uri).split('?')[0]
+		for val in ('acl', 'location', 'logging', 'torrent'):
 			#self.write("CHECKING FOR ACL\r\n")
 			if val in self.subresources:
 				#self.write("FOUND ACL\r\n")

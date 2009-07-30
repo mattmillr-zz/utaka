@@ -17,6 +17,7 @@ from utaka.src.rest.UtakaRequest import UtakaRequest
 #message handler
 
 def handler(req):
+
 	utakaRequest = UtakaRequest(req)
 	if utakaRequest.key:
 		from utaka.src.rest.UtakaObject import UtakaObject

@@ -27,7 +27,7 @@ def getUser(signature, accessKey, stringToSign):
 	conn = Connection(useDictCursor = True)
 	rs = conn.executeStatement('select userid, secretKey from user where accessKey = %s', (accessKey,))
 	if len(rs) == 0:
-		'''access key not found, throw error'''
+		raise Exception, ('hello', 'world')
 	user = rs[0]['userid']
 	pkey = rs[0]['secretKey']
 	computedSig = __computeBase64Signature(pkey, stringToSign)

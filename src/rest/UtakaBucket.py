@@ -120,58 +120,61 @@ class UtakaBucket:
 
 
 	def __getXMLResponse(self, bucketDictionary, contentDictionaryList, commonPrefixesList):
+	
 		doc = xml.dom.minidom.Document()
+		listBucketEl = doc.createElement("ListBucketResult")
 
 		nameEl = doc.createElement("Name")
 		nameEl.appendChild(doc.createTextNode(bucketDictionary.get('name')))
+		listBucketEl.appendChild(nameEl)
 
 		prefixEl = doc.createElement("Prefix")
 		prefixEl.appendChild(doc.createTextNode(bucketDictionary.get('prefix', '')))
+		listBucketEl.appendChild(prefixEl)
 
 		markerEl = doc.createElement("Marker")
 		markerEl.appendChild(doc.createTextNode(bucketDictionary.get('marker', '')))
+		listBucketEl.appendChild(markerEl)
 
 		maxkeysEl = doc.createElement("MaxKeys")
 		maxkeysEl.appendChild(doc.createTextNode(str(bucketDictionary.get('max-keys', ''))))
+		listBucketEl.appendChild(maxkeysEl)
 
 		truncatedEl= doc.createElement("IsTruncated")
 		truncatedEl.appendChild(doc.createTextNode(bucketDictionary.get('isTruncated', '')))
+		listBucketEl.appendChild(truncatedEl)
 
-		
-		contentsEl = None
-		commonPrefixesEl = None
-		if contentDictionaryList:
+		for val in contentDictionaryList:
 			contentsEl = doc.createElement("Contents")
-			for val in contentDictionaryList:
-				keyEl = doc.createElement("Key")
-				keyEl.appendChild(doc.createTextNode(val['key']))
+			keyEl = doc.createElement("Key")
+			keyEl.appendChild(doc.createTextNode(val['key']))
+			contentsEl.appendChild(keyEl)
 
-				lastModifiedEl = doc.createElement("LastModified")
-				lastModifiedEl.appendChild(doc.createTextNode(val['lastModified']))
+			lastModifiedEl = doc.createElement("LastModified")
+			lastModifiedEl.appendChild(doc.createTextNode(val['lastModified']))
+			contentsEl.appendChild(lastModifiedEl)
 
-				eTagEl = doc.createElement("ETag")
-				eTagEl.appendChild(doc.createTextNode(val['eTag']))
+			eTagEl = doc.createElement("ETag")
+			eTagEl.appendChild(doc.createTextNode(val['eTag']))
+			contentsEl.appendChild(eTagEl)
 
-				sizeEl = doc.createElement("Size")
-				sizeEl.appendChild(doc.createTextNode(str(val['size'])))
+			sizeEl = doc.createElement("Size")
+			sizeEl.appendChild(doc.createTextNode(str(val['size'])))
+			contentsEl.appendChild(sizeEl)
 
-				storageClassEl = doc.createElement("StorageClass")
-				storageClassEl.appendChild(doc.createTextNode("STANDARD"))
+			storageClassEl = doc.createElement("StorageClass")
+			storageClassEl.appendChild(doc.createTextNode("STANDARD"))
+			contentsEl.appendChild(storageClassEl)
 
-				ownerEl = doc.createElement("Owner")
-				ownerIdEl = doc.createElement("ID")
-				ownerIdEl.appendChild(doc.createTextNode(str(val['owner']['id'])))
-				ownerNameEl = doc.createElement("DisplayName")
-				ownerNameEl.appendChild(doc.createTextNode(val['owner']['name']))
-				ownerEl.appendChild(ownerIdEl)
-				ownerEl.appendChild(ownerNameEl)
-
-				contentsEl.appendChild(keyEl)
-				contentsEl.appendChild(lastModifiedEl)
-				contentsEl.appendChild(eTagEl)
-				contentsEl.appendChild(sizeEl)
-				contentsEl.appendChild(storageClassEl)
-				contentsEl.appendChild(ownerEl)
+			ownerEl = doc.createElement("Owner")
+			ownerIdEl = doc.createElement("ID")
+			ownerIdEl.appendChild(doc.createTextNode(str(val['owner']['id'])))
+			ownerNameEl = doc.createElement("DisplayName")
+			ownerNameEl.appendChild(doc.createTextNode(val['owner']['name']))
+			ownerEl.appendChild(ownerIdEl)
+			ownerEl.appendChild(ownerNameEl)
+			contentsEl.appendChild(ownerEl)
+			listBucketEl.appendChild(contentsEl)
 
 		if commonPrefixesList:
 			commonPrefixesEl = doc.createElement("CommonPrefixes")
@@ -179,16 +182,6 @@ class UtakaBucket:
 				prefixEl = doc.createElement("Prefix")
 				prefixEl.appendChild(doc.createTextNode(val))
 				commonPrefixesEl.appendChild(prefixEl)
-
-		listBucketEl = doc.createElement("ListBucketResult")
-		listBucketEl.appendChild(nameEl)
-		listBucketEl.appendChild(prefixEl)
-		listBucketEl.appendChild(markerEl)
-		listBucketEl.appendChild(maxkeysEl)
-		listBucketEl.appendChild(truncatedEl)
-		if contentsEl:
-			listBucketEl.appendChild(contentsEl)
-		if commonPrefixesEl:
 			listBucketEl.appendChild(commonPrefixesEl)
 
 		doc.appendChild(listBucketEl)
