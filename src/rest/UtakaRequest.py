@@ -53,18 +53,19 @@ class UtakaRequest:
 
 		#URI digest
 		basehost = config.get('server', 'hostname')
-		if self.req.servername == basehost
+		if self.req.hostname == basehost:
 			uriDigestResults = self.uriDigest(req.uri)
 			self.bucket = uriDigestResults.get('bucket')
 			self.key = uriDigestResults.get('key')
 		else:
-			splitHost = self.req.servername.split("." + basehost)
-			if splitHost == 2:
-				uriDigestResult = self.uriDigest(splitHost[0] + '/' + req.uri)
-				self.bucket = riDigestResults.get('bucket')
+			splitHost = self.req.hostname.split("." + basehost)
+			if len(splitHost) == 2:
+				uriDigestResults = self.uriDigest(splitHost[0] + '/' + req.uri)
+				self.bucket = uriDigestResults.get('bucket')
 				self.key = uriDigestResults.get('key')
 			else:
-				'''throw error'''
+				self.req.write("HOST: " + self.req.hostname + "\r\n")
+				raise Exception, 'wrong hostname?'
 
 		#custom header table
 		try:
@@ -76,22 +77,24 @@ class UtakaRequest:
 			for val in self.req.headers_in.keys():
 				if val.lower().startswith(self.customHeaderPrefix):
 					self.customHeaderTable[val.lower()[len(self.customHeaderPrefix):]] = self.req.headers_in[val]
-				
+
 		#authenticate -- must happen after custom header table is created
 		self.accesskey, self.signature = self.__getAccessKeyAndSignature()
 		if self.accesskey:
 			self.stringToSign = self.__buildStringToSign()
 			self.user, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
+		else:
+			raise Exception, 'no access key'
 
 		#Check date
 		#check customDateHeader then date header
-		
+
 		if 'signature' in self.subresources:
 			self.write(self.computedSig + "\r\n")
 			self.write(self.stringToSign + "\r\n")
 			self.write(str(self.subresources) + "\r\n")
 			self.send()
-		
+
 	def write(self, msg):
 		self.__writeBuffer += msg
 
@@ -99,7 +102,7 @@ class UtakaRequest:
 		#self.req.content_type = 'application/xml'
 		self.req.set_content_length(len(self.__writeBuffer))
 		self.req.write(self.__writeBuffer)
-		
+
 	def uriDigest(self, uri):
 		results = {}
 		splitURI = uri.split('/', 2)
@@ -111,7 +114,7 @@ class UtakaRequest:
 		elif len(splitURI) == 1:
 			results['bucket'] = splitURI[0]
 		return results
-		
+
 	def __buildStringToSign(self):
 		nl = '\n'
 
@@ -146,25 +149,14 @@ class UtakaRequest:
 				uriString += '?' + val
 		return (methodString + nl + contentMd5String + nl +
 			contentTypeString + nl + dateString + nl + canCustomHeaders + uriString)
-		
-		
+
+
 	def __getAccessKeyAndSignature(self):
-		try:
-			header = config.get('authentication', 'header')
-			prefix = config.get('authentication', 'prefix') + ' '
-		except ServerException, e:
-			raise exception, e
-		else:
-			try:
-				authString = self.req.headers_in[header]
-			except KeyError:
-				return None, None
-			else:
-				splitAuth = authString.split(prefix)
-				if len(splitAuth) == 2 and len(splitAuth[0]) == 0:
-					try:
-						accesskey, signature = splitAuth[1].split(':')
-					except ValueError, e:
-						raise exception, "BAD AUTH STRING"
-					else:
-						return accesskey, signature
+		header = config.get('authentication', 'header')
+		prefix = config.get('authentication', 'prefix') + ' '
+		authString = self.req.headers_in[header]
+		splitAuth = authString.split(prefix)
+		accesskey = signature = None
+		if len(splitAuth) == 2 and len(splitAuth[0]) == 0:
+			accesskey, signature = splitAuth[1].split(':')
+		return accesskey, signature

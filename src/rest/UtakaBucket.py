@@ -106,7 +106,7 @@ class UtakaBucket:
 	def __putAclOperation(self):
 		#READ BODY
 		acp = AcpXml.fromXML(self.utakaReq.req.read())
-		Bucket.putBucketACP(user=self.utakaReq.user, bucket=self.utakaReq.bucket, accessControlPolicy=acp)
+		Bucket.setBucketACP(user=self.utakaReq.user, bucket=self.utakaReq.bucket, accessControlPolicy=acp)
 		pass
 
 
@@ -115,6 +115,7 @@ class UtakaBucket:
 		if len(bucket_acp) == 0:
 			'''bucket not found, throw error'''
 		else:
+			self.utakaReq.req.content_type = 'applicaton/xml'
 			self.utakaReq.write(AcpXml.toXML(bucket_acp))
 
 

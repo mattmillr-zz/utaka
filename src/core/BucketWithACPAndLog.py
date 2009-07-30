@@ -32,11 +32,11 @@ def getBucketACP(user, bucket):
 	return BucketACP.getBucketACP(bucket)
 
 
-def setBucketACP(user, bucket):
+def setBucketACP(user, bucket, accessControlPolicy):
 	if not BucketACP.checkUserPermission(user, bucket, 'write_acp'):
 		raise Exception, 'forbidden action'
 	BucketLogging.logEvent(bucket, user, 'write_bucket_acp')
-	BucketACP.setBucketACP(bucket)
+	BucketACP.setBucketACP(bucket, accessControlPolicy)
 
 
 def setBucketLogStatus(user, srcBucket, logBucket):
