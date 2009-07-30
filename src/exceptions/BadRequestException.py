@@ -1,5 +1,5 @@
 
-from utaka/src/exceptions/UtakaException import UtakaException
+from utaka.src.exceptions.UtakaException import UtakaException
 
 #400
 class BadRequestException(UtakaException):
@@ -63,13 +63,17 @@ class InlineDataTooLargeException(BadRequestException):
 			 'Code' : 'InlineDataTooLarge'})
 
 class InvalidArgumentException(BadRequestException):
-	def __init__(self, argumentValue, argumentName):
+	def __init__(self, argValue, argName, msg='Invalid Argument'):
 		BadRequestException.__init__(self,
-			{'Message' : 'Invalid Argument',
+			{'Message' : msg,
 			 'Code' : 'InvalidArgument',
-			 'ArgumentValue' : argumentValue,
-			 'ArgumentName' : argumentName})
+			 'ArgumentValue' : argValue,
+			 'ArgumentName' : argName})
 
+class InvalidAuthorizationException(InvalidArgumentException):
+	def __init__(self, argValue):
+		InvalidArgumentException.__init__(self, argValue, 'Authorization', "Authorization header is invalid -- one and only one ' '(space) required")
+		
 class InvalidBucketNameException(BadRequestException):
 	def __init__(self, bucketName):
 		BadRequestException.__init__(self,

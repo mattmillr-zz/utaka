@@ -16,6 +16,7 @@ from mod_python import apache
 from mod_python import util
 from utaka.src.rest.HMAC_SHA1_Authentication import getUser
 import utaka.src.config as config
+import utaka.src.exceptions.BadRequestException as BadRequestException
 
 
 '''
@@ -85,8 +86,6 @@ class UtakaRequest:
 		if self.accesskey:
 			self.stringToSign = self.__buildStringToSign()
 			self.user, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
-		else:
-			raise Exception, 'no access key'
 
 		#Check date
 		#check customDateHeader then date header
@@ -160,9 +159,18 @@ class UtakaRequest:
 	def __getAccessKeyAndSignature(self):
 		header = config.get('authentication', 'header')
 		prefix = config.get('authentication', 'prefix') + ' '
-		authString = self.req.headers_in[header]
-		splitAuth = authString.split(prefix)
 		accesskey = signature = None
-		if len(splitAuth) == 2 and len(splitAuth[0]) == 0:
-			accesskey, signature = splitAuth[1].split(':')
+		try:
+			authString = self.req.headers_in[header]
+		except KeyError:
+			pass
+		else:
+			splitAuth = authString.split(prefix)
+			if len(splitAuth) == 2 and len(splitAuth[0]) == 0:
+				try:
+					accesskey, signature = splitAuth[1].split(':')
+				except ValueError:
+					raise BadRequestException.InvalidAuthorizationException(argValue = authString)
+			else:
+				raise BadRequestException.InvalidAuthorizationException(argValue = authString)
 		return accesskey, signature

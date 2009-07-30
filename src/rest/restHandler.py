@@ -14,22 +14,56 @@
 
 from mod_python import apache
 from utaka.src.rest.UtakaRequest import UtakaRequest
+from utaka.src.exceptions import *
 #message handler
 
 def handler(req):
 
-	utakaRequest = UtakaRequest(req)
-	if utakaRequest.key:
-		from utaka.src.rest.UtakaObject import UtakaObject
-		restResource = UtakaObject(utakaRequest)
-	elif utakaRequest.bucket:
-		from utaka.src.rest.UtakaBucket import UtakaBucket
-		restResource = UtakaBucket(utakaRequest)
+	try:
+		utakaRequest = UtakaRequest(req)
+
+		if utakaRequest.key:
+			from utaka.src.rest.UtakaObject import UtakaObject
+			restResource = UtakaObject(utakaRequest)
+		elif utakaRequest.bucket:
+			from utaka.src.rest.UtakaBucket import UtakaBucket
+			restResource = UtakaBucket(utakaRequest)
+		else:
+			from utaka.src.rest.UtakaService import UtakaService
+			restResource = UtakaService(utakaRequest)
+
+		restResource.handleRequest()
+
+	except UtakaException.UtakaException, e:
+		if isinstance(e, MovedPermanentlyException.MovedPermanentlyException):
+			req.status = 301
+		elif isinstance(e, MovedTemporarilyException.MovedTemporarilyException):
+			req.status = 307
+		if isinstance(e, BadRequestException.BadRequestException):
+			req.status = 400
+		elif isinstance(e, ForbiddenException.ForbiddenException):
+			req.status = 403
+		elif isinstance(e, NotFoundException.NotFoundException):
+			req.status = 404
+		elif isinstance(e, MethodNotAllowedException.MethodNotAllowedException):
+			req.status = 405
+		elif isinstance(e, ConflictException.ConflictException):
+			req.status = 409
+		elif isinstance(e, LengthRequiredException.LengthRequiredException):
+			req.status = 411
+		elif isinstance(e, PreconditionFailException.PreconditionFailException):
+			req.status = 412
+		elif isinstance(e, RequestedRangeNotSatisfiableException.RequestedRangeNotSatisfiableException):
+			req.status = 416
+		elif isinstance(e, InternalErrorException.InternalErrorException):
+			req.status = 500
+		elif isinstance(e, NotImplementedException.NotImplementedException):
+			req.status = 501
+		elif isinstance(e, ServiceUnavailableException.ServiceUnavailableException):
+			req.status = 503
+		#print out error xml
+
 	else:
-		from utaka.src.rest.UtakaService import UtakaService
-		restResource = UtakaService(utakaRequest)
+		utakaRequest.send()
 
-	restResource.handleRequest()
-
-	utakaRequest.send()
 	return apache.OK

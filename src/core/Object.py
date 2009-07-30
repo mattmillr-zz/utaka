@@ -16,6 +16,7 @@
 #limitations under the License.
 
 from MySQLdb import escape_string
+import utaka.src.exceptions.NotFoundException
 from utaka.src.DataAccess.connection import Connection
 from utaka.src.errors.WriteErrors import ObjectWriteError
 from utaka.src.errors.UtakaErrors import UtakaError
@@ -82,7 +83,7 @@ def getObject(userId, bucket, key, getMetadata, getData, byteRangeStart = None, 
     query = "SELECT o.object, o.bucket, o.hashfield, o.object_create_time, o.eTag, o.object_mod_time, o.size, o.content_type, o.content_encoding, o.content_disposition, o.userid, u.username FROM object as o, user as u WHERE o.bucket = %s AND o.object = %s AND o.userid = u.userid"
     result = conn.executeStatement(query, (escape_string(str(bucket)), escape_string(str(key))))
     if len(result) == 0:
-        raise UtakaDataAccessError("KeyNotFound")
+        raise NotFoundException.NoSuchKey(bucket, key)
     result = result[0]
     
 

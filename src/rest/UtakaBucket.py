@@ -179,9 +179,9 @@ class UtakaBucket:
 		if commonPrefixesList:
 			commonPrefixesEl = doc.createElement("CommonPrefixes")
 			for val in commonPrefixesList:
-				prefixEl = doc.createElement("Prefix")
-				prefixEl.appendChild(doc.createTextNode(val))
-				commonPrefixesEl.appendChild(prefixEl)
+				commonPrefixEl = doc.createElement("Prefix")
+				commonPrefixEl.appendChild(doc.createTextNode(val))
+				commonPrefixesEl.appendChild(commonPrefixEl)
 			listBucketEl.appendChild(commonPrefixesEl)
 
 		doc.appendChild(listBucketEl)

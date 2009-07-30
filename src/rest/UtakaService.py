@@ -37,12 +37,15 @@ class UtakaService:
 
 	def __getOperation(self):
 		import utaka.src.core.Service as Service
-		result = Service.getService(self.utakaReq.user)
-		userDict = result['user']
-		listOfBuckets = result['buckets']
-		self.utakaReq.req.content_type = 'application/xml'
-		self.utakaReq.write(self.__getServiceXMLResponse(userDict, listOfBuckets))
-		return apache.OK
+		if self.utakaReq.user:
+			result = Service.getService(self.utakaReq.user)
+			userDict = result['user']
+			listOfBuckets = result['buckets']
+			self.utakaReq.req.content_type = 'application/xml'
+			self.utakaReq.write(self.__getServiceXMLResponse(userDict, listOfBuckets))
+		else:
+			import utaka.src.exceptions.ForbiddenException as ForbiddenException
+			raise ForbiddenException.AccessDeniedException
 
 
 	def __getServiceXMLResponse(self, userDictionary, bucketDictionaryList):
