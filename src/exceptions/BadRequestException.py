@@ -4,7 +4,7 @@ from utaka.src.exceptions.UtakaException import UtakaException
 #400
 class BadRequestException(UtakaException):
 	def __init__(self, args):
-		UtakaException.__init__(self, args)
+		UtakaException.__init__(self, args, 400)
 
 class AmbiguousGrantByEmailAddress(BadRequestException):
 	def __init__(self):

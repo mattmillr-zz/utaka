@@ -13,16 +13,15 @@
 #limitations under the License.
 
 import ConfigParser
-from utaka.src.errors.ServerExceptions import ServerException
+import utaka.src.exceptions.InternalErrorException as InternalErrorException
 
 configFile = "/var/www/html/utaka/config/.utaka_config"
-
 config = ConfigParser.ConfigParser()
 
 config.read(configFile)
 
 def get (section, key):
-    try:
-        return config.get(section, key)
-    except:
-        raise ServerException('configuration problem')
+	try:
+		return config.get(section, key)
+	except Exception, e:
+		raise InternalErrorException.ConfigErrorException(e, configFile)

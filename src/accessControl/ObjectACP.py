@@ -28,13 +28,15 @@ returns:
 '''
 def getObjectACP(bucket, key):
 	conn = Connection(useDictCursor = True)
-	rs = conn.executeStatement('''SELECT userid, username, 'owner' as permission
-	                              FROM user JOIN object USING(userid)
-	                              WHERE object = %s and bucket = %s
-	                              UNION
-	                              SELECT userid, username, permission
-	                              FROM object_permission JOIN user USING(userid)
-	                              WHERE object = %s and bucket = %s''', (key, bucket, key, bucket))
+	rs = conn.executeStatement(
+	  '''SELECT userid, username, 'owner' as permission
+	     FROM user JOIN object USING(userid)
+	     WHERE object = %s and bucket = %s
+	     UNION
+	     SELECT userid, username, permission
+	     FROM object_permission JOIN user USING(userid)
+	     WHERE object = %s and bucket = %s
+	  ''', (key, bucket, key, bucket))
 	conn.close()
 	acp = {}
 	if len(rs) > 0:
@@ -79,25 +81,47 @@ params:
 	action
 returns:
 	bool permitted
+raises:
+	NoSuchKeyException, InternalErrorException
 '''
 def checkUserPermission(user, bucket, key, action):
 	if action in ('read', 'read_acp', 'write_acp'):
 		conn = Connection()
 		if user:
-			result = conn.executeStatement('select count(*) as rows from object_permission where userid IN(2, %s) and object = %s and bucket = %s and permission IN(%s, "full_control")', (user, key, bucket, action))
+			result = conn.executeStatement(
+			  '''SELECT (SELECT COUNT(*) from object WHERE bucket = %s and object = %s) + 
+			    (SELECT COUNT(*) from object_permission
+			     WHERE bucket = %s and object = %s and userid = %s and permission IN(%s, 'full_control'))
+			  ''', (bucket, object, bucket, object, userid, action))
 		else:
-			result = conn.executeStatement('select count(*) as rows from object_permission where userid = 1 and object = %s and bucket = %s and permission IN(%s, "full_control")', (key, bucket, action))
+			result = conn.executeStatement(
+			  '''SELECT (SELECT COUNT(*) FROM object WHERE bucket = %s and object = %s) + 
+			    (SELECT COUNT(*) FROM object_permission WHERE bucket = %s and object = %s and userid = 1 and permission IN(%s, 'full_control'))
+			  ''', (bucket, object, bucket, object, action))
 		conn.close()
-		return result[0][0] > 0
+		if result[0][0] == 0:
+			raise NotFoundException.NoSuchKeyException(bucket, key)
+		else:
+			return result[0][0] > 1
 	elif action in('write'):
 		conn = Connection()
 		if user:
-			result = conn.executeStatement('''SELECT SUM( (SELECT COUNT(*) FROM bucket_permission where userid IN(2, %s) and bucket = %s and permission IN('write', 'full_control'))
-			          + (SELECT COUNT(*) FROM object_permission where userid IN(2, %s) and bucket = %s and object = %s and permission IN('write', 'full_control')))''', (user, bucket, user, bucket, object))
+			result = conn.executeStatement(
+			  '''SELECT ( SELECT COUNT(*) FROM object WHERE bucket = %s and object = %s ) +
+			    (SELECT COUNT(*) FROM bucket_permission where userid IN(2, %s) and bucket = %s and permission IN('write', 'full_control')) +
+			    (SELECT COUNT(*) FROM object_permission where userid IN(2, %s) and bucket = %s and object = %s and permission IN('write', 'full_control'))
+			  ''', (bucket, key, user, bucket, user, bucket, key))
 		else:
-			result = conn.executeStatement('''SELECT SUM( (SELECT COUNT(*) FROM bucket_permission where userid = 1 and bucket = %s and permission IN('write', 'full_control'))
-			          + (SELECT COUNT(*) FROM object_permission where userid = 1 and bucket = %s and object = %s and permission IN('write', 'full_control')))''', (bucket, bucket, object))
+			result = conn.executeStatement(
+			  '''SELECT ( SELECT COUNT(*) FROM object WHERE bucket = %s and object = %s ) +
+			    (SELECT COUNT(*) FROM bucket_permission where userid = 1 and bucket = %s and permission IN('write', 'full_control')) +
+			    (SELECT COUNT(*) FROM object_permission where userid = 1 and bucket = %s and object = %s and permission IN('write', 'full_control'))
+			  ''', (bucket, key, bucket, bucket, key))
 		conn.close()
-		return result[0][0] > 0
+		if result[0][0] == 0:
+			raise NotFoundException.NoSuchKeyException(bucket, key)
+		else:
+			return result[0][0] > 1
 	else:
-		raise exception, "Invalid action"
+		raise InternalErrorException.BadArgumentException('action', str(action),
+		  'Invalid action for ObjectACP.checkUserPermission: action must be IN ("write", "read", "write_acp", "read_acp").')

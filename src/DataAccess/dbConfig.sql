@@ -22,16 +22,17 @@ CREATE TABLE user (
 	userid SERIAL PRIMARY KEY,
 	username VARCHAR(64) NOT NULL UNIQUE,
 	accesskey VARCHAR(40) UNIQUE,
-	secretkey VARCHAR(40) UNIQUE
+	secretkey VARCHAR(40) UNIQUE,
+	isAdmin Boolean DEFAULT FALSE
 ) ENGINE=InnoDB;
 
 insert into user(username, accesskey, secretkey) values('UTAKA_ALL_USERS', '', '');
 insert into user(username, accesskey, secretkey) values('UTAKA_AUTHENTICATED_USERS', null, null);
-insert into user(username, accesskey, secretkey) values('burke', 'burkeAccess', 'burkeSecret');
-insert into user(username, accesskey, secretkey) values('s3', '0RSHVZKB35P0XEBKXBR2', 'G8dsSIQoxpuVtMCnzqPpK0uckYKcI95vIkBbZFQ6');
-insert into user(username, accesskey, secretkey) values('miller', 'millerAccess', 'millerSecret');
-insert into user(username, accesskey, secretkey) values('tuscher', 'tuscherAccess', 'tuscherSecret');
-insert into user(username, accesskey, secretkey) values('jett', 'jettAccess', 'jettSecret');
+insert into user(username, accesskey, secretkey, isAdmin) values('burke', 'burkeAccess', 'burkeSecret', TRUE);
+insert into user(username, accesskey, secretkey, isAdmin) values('s3', 's3', 'G8dsSIQoxpuVtMCnzqPpK0uckYKcI95vIkBbZFQ6', TRUE);
+insert into user(username, accesskey, secretkey, isAdmin) values('miller', 'millerAccess', 'millerSecret', TRUE);
+insert into user(username, accesskey, secretkey, isAdmin) values('tuscher', 'tuscherAccess', 'tuscherSecret', TRUE);
+insert into user(username, accesskey, secretkey, isAdmin) values('jett', 'jettAccess', 'jettSecret', TRUE);
 
 CREATE TABLE bucket (
 	userid BIGINT UNSIGNED NOT NULL,

@@ -18,10 +18,9 @@ from utaka.src.exceptions import *
 #message handler
 
 def handler(req):
-
+	debug = True
 	try:
 		utakaRequest = UtakaRequest(req)
-
 		if utakaRequest.key:
 			from utaka.src.rest.UtakaObject import UtakaObject
 			restResource = UtakaObject(utakaRequest)
@@ -31,39 +30,35 @@ def handler(req):
 		else:
 			from utaka.src.rest.UtakaService import UtakaService
 			restResource = UtakaService(utakaRequest)
-
 		restResource.handleRequest()
-
-	except UtakaException.UtakaException, e:
-		if isinstance(e, MovedPermanentlyException.MovedPermanentlyException):
-			req.status = 301
-		elif isinstance(e, MovedTemporarilyException.MovedTemporarilyException):
-			req.status = 307
-		if isinstance(e, BadRequestException.BadRequestException):
-			req.status = 400
-		elif isinstance(e, ForbiddenException.ForbiddenException):
-			req.status = 403
-		elif isinstance(e, NotFoundException.NotFoundException):
-			req.status = 404
-		elif isinstance(e, MethodNotAllowedException.MethodNotAllowedException):
-			req.status = 405
-		elif isinstance(e, ConflictException.ConflictException):
-			req.status = 409
-		elif isinstance(e, LengthRequiredException.LengthRequiredException):
-			req.status = 411
-		elif isinstance(e, PreconditionFailException.PreconditionFailException):
-			req.status = 412
-		elif isinstance(e, RequestedRangeNotSatisfiableException.RequestedRangeNotSatisfiableException):
-			req.status = 416
-		elif isinstance(e, InternalErrorException.InternalErrorException):
-			req.status = 500
-		elif isinstance(e, NotImplementedException.NotImplementedException):
-			req.status = 501
-		elif isinstance(e, ServiceUnavailableException.ServiceUnavailableException):
-			req.status = 503
-		#print out error xml
-
+	except Exception, e:
+		if not isinstance(e, UtakaException.UtakaException):
+			e = InternalErrorException.GeneralErrorException(e)
+		req.status = e.httpStatus
+		import xml.dom.minidom
+		doc = xml.dom.minidom.Document()
+		errorEl = doc.createElement("Error")
+		for key, val in e.args.iteritems():
+			keyEl = doc.createElement(str(key))
+			keyEl.appendChild(doc.createTextNode(str(val)))
+			errorEl.appendChild(keyEl)
+		if debug:
+			debugEl = doc.createElement("Debug")
+			import traceback
+			tracebackEl = doc.createElement("Traceback")
+			tracebackEl.appendChild(doc.createTextNode(str(traceback.format_exc())))
+			debugEl.appendChild(tracebackEl)
+			if 'devArgs' in e.__dict__.keys():
+				for key, val in e.devArgs.iteritems():
+					keyEl = doc.createElement(str(key))
+					keyEl.appendChild(doc.createTextNode(str(val)))
+					debugEl.appendChild(keyEl)
+			errorEl.appendChild(debugEl)
+		doc.appendChild(errorEl)
+		req.content_type = 'application/xml'
+		errOutput = doc.toxml('utf-8')
+		req.content_length = len(errOutput)
+		req.write(errOutput)
 	else:
 		utakaRequest.send()
-
 	return apache.OK

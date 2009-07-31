@@ -2,7 +2,7 @@ from utaka.src.exceptions.UtakaException import UtakaException
 
 class NotFoundException(UtakaException):
 	def __init__(self, args):
-		UtakaException.__init__(self, args)
+		UtakaException.__init__(self, args, 404)
 		
 class NoSuchBucketException(NotFoundException):
 	def __init__(self, bucket):

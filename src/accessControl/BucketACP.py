@@ -18,21 +18,24 @@ Created on Jul 10, 2009
 '''
 
 from utaka.src.DataAccess.connection import Connection
-
+import utaka.src.exceptions.NotFoundException as NotFoundException
+import utaka.src.exceptions.InternalErrorException as InternalErrorException
 '''
 params:
 	str bucket
 returns:
 	{owner : {userid, username}, acl : [{grantee:{userid, username}, permission}]}
+raises:
+	NoSuchBucketException
 '''
 def getBucketACP(bucket):
 	conn = Connection(useDictCursor = True)
 	rs = conn.executeStatement('''SELECT userid, username, 'owner' as permission
-	                              FROM user JOIN bucket USING(userid) WHERE bucket = %s
-	                              UNION
-	                              SELECT userid, username, permission
-	                              FROM bucket_permission JOIN user USING(userid)
-	                              WHERE bucket = %s''', (bucket, bucket))
+	  FROM user JOIN bucket USING(userid) WHERE bucket = %s
+	  UNION
+	  SELECT userid, username, permission
+	  FROM bucket_permission JOIN user USING(userid)
+	  WHERE bucket = %s''', (bucket, bucket))
 	conn.close()
 	acp = {}
 	if len(rs) > 0:
@@ -40,9 +43,9 @@ def getBucketACP(bucket):
 		acp['acl'] = []
 		for grant in rs[1:]:
 			acp['acl'].append({'grantee':{'userid':grant['userid'], 'username':grant['username']}, 'permission':grant['permission']})
+		return acp
 	else:
-		raise Exception, 'object not found'
-	return acp
+		raise NotFoundException.NoSuchBucketException(bucket)
 
 
 '''
@@ -76,25 +79,37 @@ params:
 	action
 returns:
 	bool permitted
+raises:
+	InternalErrorException, NotFoundException
 '''
 def checkUserPermission(user, bucket, action):
 	if action in ('write_log_status', 'read_log_status', 'destroy'):
 		if not user:
-			'''throw error'''
-		conn = Connection()
-		result = conn.executeStatement('select userid from bucket USING(userid) where userid = %s and bucket = %s', (user, bucket))
-		conn.close()
-		return len(result)
+			return False
+		else:
+			conn = Connection()
+			result = conn.executeStatement('SELECT userid from bucket where bucket = %s', (bucket,))
+			conn.close()
+			if len(result) == 0:
+				raise NotFoundException.NoSuchBucketException(bucket)
+			else:
+				return result[0][0] == user
 	elif action in ('read', 'write', 'read_acp', 'write_acp'):
 		conn = Connection()
 		if user:
-			result = conn.executeStatement('select count(*) as rows from bucket_permission where userid IN(2, %s) and bucket = %s and permission IN(%s, "full_control")', (user, bucket, action))
+			result = conn.executeStatement('''SELECT (SELECT COUNT(*) FROM bucket WHERE bucket = %s) +
+			  (SELECT COUNT(*) FROM bucket_permission WHERE userid IN(2, %s) and bucket = %s and permission IN(%s, "full_control"))''', (bucket, user, bucket, action))
 		else:
-			result = conn.executeStatement('select count(*) as rows from bucket_permission where userid = 1 and bucket = %s and permission IN(%s, "full_control")', (bucket, action))
+			result = conn.executeStatement('''SELECT (SELECT COUNT(*) FROM bucket WHERE bucket = %s) +
+			  (SELECT COUNT(*) FROM bucket_permission WHERE userid = 1 and bucket = %s and permission IN(%s, 'full_control'))''', (bucket, bucket, action))
 		conn.close()
-		return result[0][0] > 0
+		if result[0][0] == 0:
+			raise NotFoundException.NoSuchBucketException(bucket)
+		else:
+			return result[0][0] > 1
 	else:
-		'''throw error'''
+		raise InternalErrorException.BadArgumentException('action', str(action),
+		  'Invalid action for BucketACP.checkUserPermission: action must be IN ("write_log_status", "read_log_status", "destroy", "write", "read", "write_acp", "read_acp").')
 
 
 

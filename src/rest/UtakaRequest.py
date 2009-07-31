@@ -166,7 +166,7 @@ class UtakaRequest:
 			pass
 		else:
 			splitAuth = authString.split(prefix)
-			if len(splitAuth) == 2 and len(splitAuth[0]) == 0:
+			if len(splitAuth) == 2 and len(splitAuth[0]) == 0 and splitAuth[1].find(' ') < 0:
 				try:
 					accesskey, signature = splitAuth[1].split(':')
 				except ValueError:
