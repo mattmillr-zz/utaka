@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssreset/reset-min.css" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
+	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
+	<title>Utaka REST API – Bucket</title>	
+</head>
+<body>
+	<div class="title">
+		Utaka – A Cloud Storage Service
+	</div>
+	<img class="logo" src="images/utaka_fish_left.png" />
+	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<div class="content">
+		<h1>Utaka REST API – Bucket</h1>
+		<a name="get_bucket"></a>
+		<h2><span class="code">GET</span> Bucket</h2>
+		<p class="rest_method_description">The <code class="http_method">GET</code> method, when given a bucket name, will return a list of objects in that bucket. There are several options for restricting what objects are returned.</p>
+		<h3>Request</h3>
+		<pre class="http">
+GET ?prefix=<span class="http_replace">prefix</span>;marker=<span class="http_replace">marker</span>;max-keys=<span class="http_replace">max-keys</span>;delimiter=<span class="http_replace">delimiter</span> HTTP/1.1
+Host: <span class="http_replace">bucketName</span>.file.hisg.org
+Date: <span class="http_replace">date</span>
+Authorization: <span class="http_replace">signature</span></pre>
+		<h4>Headers / Parameters</h4>
+		<div class="under_h4">
+			<table class="rest_description">
+				<tr><th>Name</th><th>Description</th></tr>
+				<tr>
+					<td><a name="prefix"></a><code class="rest_parameter_name">prefix</code></td>
+					<td>
+						Limits objects to only those that begin with <code class="rest_parameter_name">prefix</code>.<br />
+						Data: String<br />
+						Optional (defaults to none)
+					</td>
+				</tr>
+				<tr>
+					<td><a name="marker"></a><code class="rest_parameter_name">marker</code></td>
+					<td>
+						Limits object to only those that appear alphabetically after <code class="rest_parameter_name">marker</code>.<br />
+						Data: String<br />
+						Optional (defaults to none)
+					</td>
+				</tr>
+				<tr>
+					<td><a name="max-keys"></a><code class="xml_element_name">max-keys</code></td>
+					<td>
+						The maximum number of objects that should be returned. Can return less than <code class="rest_parameter_name">max-keys</code>.<br />
+						Data: String (restricted to integers)<br />
+						Optional (defaults to none)
+					</td>
+				</tr>
+				<tr>
+					<td><a name="delimiter"></a><code class="xml_element_name">delimiter</code></td>
+					<td>
+						Groups objects together that have the same string between <code class="rest_parameter_name">prefix</code> and <code class="rest_parameter_name">delimiter</code>.<br />
+						Data: String<br />
+						Optional (defaults to none)
+					</td>
+				</tr>
+			</table>
+		</div>
+		<h3>Response</h3>
+		<pre class="http">
+HTTP/1.1 200 OK
+Date: <span class="http_replace">date</span>
+Content-Type: <span class="http_replace">type</span>
+Content-Length: <span class="http_replace">length</span>
+Connection: close
+Server: HISGUtaka
+
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;ListBucketResult xmlns=&quot;http://mattmillr.github.com/utaka&quot;&gt;
+  &lt;Name&gt;<span class="http_replace">bucket</span>&lt;/Name&gt;
+  &lt;Prefix&gt;<span class="http_replace">prefix</span>&lt;/Prefix&gt;
+  &lt;Marker&gt;<span class="http_replace">marker</span>&lt;/Marker&gt;
+  &lt;MaxKeys&gt;<span class="http_replace">max-keys</span>&lt;/MaxKeys&gt;
+  &lt;IsTruncated&gt;<span class="http_replace">true|false</span>&lt;/IsTruncated&gt;
+  &lt;Contents&gt;
+    &lt;Key&gt;<span class="http_replace">object</span>&lt;/Key&gt;
+    &lt;LastModified&gt;<span class="http_replace">date</span>&lt;/LastModified&gt;
+    &lt;ETag&gt;&amp;quot;<span class="http_replace">eTag</span>&amp;quot;&lt;/ETag&gt;
+    &lt;Size&gt;<span class="http_replace">size</span>&lt;/Size&gt;
+    &lt;StorageClass&gt;STANDARD&lt;/StorageClass&gt;
+    &lt;Owner&gt;
+      &lt;ID&gt;<span class="http_replace">user_id</span>&lt;/ID&gt;
+      &lt;DisplayName&gt;<span class="http_replace">display_name</span>&lt;/DisplayName&gt;
+     &lt;/Owner&gt;
+  &lt;/Contents&gt;
+  ...
+&lt;/ListBucketResult&gt;</pre>
+		<h4>Headers / Elements</h4>
+		<div class="under_h4">
+			<table class="rest_description">
+				<tr><th>Name</th><th>Description</th></tr>
+				<tr>
+					<td><a name="ListBucketResult"></a><code class="xml_element_name">ListBucketResult</code></td>
+					<td>
+						Root element.<br />
+						Children: <a href="#Name" class="code xml_element_name">Name</a>, <a href="#Prefix" class="code xml_element_name">Prefix</a>, <a href="#Marker" class="code xml_element_name">Marker</a>, <a href="#MaxKeys" class="code xml_element_name">MaxKeys</a>, <a href="#IsTruncated" class="code xml_element_name">IsTruncated</a>, and <a href="#Contents" class="code xml_element_name">Contents</a><br />
+						Parent: None
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Name"></a><code class="xml_element_name">Name</code></td>
+					<td>
+						The bucket&#x27;s unique name.<br />
+						Data: String<br />
+						Parent: <a href="#ListBucketResult" class="code xml_element_name">ListBucketResult</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Prefix"></a><code class="xml_element_name">Prefix</code></td>
+					<td>
+						The <a href="#prefix" class="code xml_element_name">prefix</a> given in the request.<br />
+						Data: String<br />
+						Parent: <a href="#ListBucketResult" class="code xml_element_name">ListBucketResult</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Marker"></a><code class="xml_element_name">Marker</code></td>
+					<td>
+						The <a href="#marker" class="code xml_element_name">marker</a> given in the request.<br />
+						Data: String<br />
+						Parent: <a href="#ListBucketResult" class="code xml_element_name">ListBucketResult</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="MaxKeys"></a><code class="xml_element_name">MaxKeys</code></td>
+					<td>
+						The <a href="#max-keys" class="code xml_element_name">max-keys</a> given in the request. Defaults to 1000 if no value was given.<br />
+						Data: String (restricted to integers)<br />
+						Parent: <a href="#ListBucketResult" class="code xml_element_name">ListBucketResult</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Contents"></a><code class="xml_element_name">Contents</code></td>
+					<td>
+						Contains an object&#x27;s information.<br />
+						Children: <a href="#Key" class="code xml_element_name">Key</a>, <a href="#LastModified" class="code xml_element_name">LastModified</a>, <a href="#ETag" class="code xml_element_name">ETag</a>, <a href="#Size" class="code xml_element_name">Size</a>, <a href="#StorageClass" class="code xml_element_name">StorageClass</a>, and <a href="#Owner" class="code xml_element_name">Owner</a><br />
+						Parent: <a href="#ListBucketResult" class="code xml_element_name">ListBucketResult</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Key"></a><code class="xml_element_name">Key</code></td>
+					<td>
+						The object&#x27;s unique name.<br />
+						Data: String<br />
+						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="LastModified"></a><code class="xml_element_name">LastModified</code></td>
+					<td>
+						The date the object was last modified.<br />
+						Data: String (Date formatted)<br />
+						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="ETag"></a><code class="xml_element_name">ETag</code></td>
+					<td>
+						The MD5 hash of the object.<br />
+						Data: String<br />
+						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Size"></a><code class="xml_element_name">Size</code></td>
+					<td>
+						The size of the object in bytes.<br />
+						Data: String (restricted to integers)<br />
+						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="StorageClass"></a><code class="xml_element_name">StorageClass</code></td>
+					<td>
+						Amazon has it, but they don't even use it.<br />
+						Data: &#x27;STANDARD&#x27;<br />
+						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="Owner"></a><code class="xml_element_name">Owner</code></td>
+					<td>
+						Contains information about the object&#x27;s owner.<br />
+						Children: <a href="#ID" class="code xml_element_name">ID</a> and <a href="#DisplayName" class="code xml_element_name">DisplayName</a><br />
+						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="ID"></a><code class="xml_element_name">ID</code></td>
+					<td>
+						The owner&apos;s unique ID.<br />
+						Data: Integer<br />
+						Parent: <a href="#Owner" class="code xml_element_name">Owner</a>
+					</td>
+				</tr>
+				<tr>
+					<td><a name="DisplayName"></a><code class="xml_element_name">DisplayName</code></td>
+					<td>
+						The owner&apos;s unique name.<br />
+						Data: String<br />
+						Parent: <a href="#Owner" class="code xml_element_name">Owner</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<a name="put_bucket"></a>
+		<h2><span class="code">PUT</span> Bucket</h2>
+		<p class="rest_method_description">The <code class="http_method">PUT</code> method, when given a bucket name, will create a bucket owned by the user sending the request.</p>
+		<h3>Request</h3>
+		<pre class="http">
+PUT / HTTP/1.1
+Host: <span class="http_replace">bucketName</span>.file.hisg.org
+Content-Length: 0
+Date: <span class="http_replace">date</span>
+Authorization: <span class="http_replace">signature</span></pre>
+		<h4>Headers / Parameters</h4>
+		<div class="under_h4">
+			Note that S3 has a set of parameters enclosed inside <code class="xml_element_name">&lt;CreateBucketConfiguration&gt;</code> in the body of the request. Utaka does not implement this and therefore will simply ignore it.
+		</div>
+		<h3>Response</h3>
+		<pre class="http">
+HTTP/1.1 200 OK
+Date: <span class="http_replace">date</span>
+Content-Length: 0
+Connection: close
+Server: HISGUtaka</pre>
+		<a name="delete_bucket"></a>
+		<h2><span class="code">DELETE</span> Bucket</h2>
+		<p class="rest_method_description">The <code class="http_method">DELETE</code> method, when given a bucket name, will delete the bucket if it is empty.</p>
+		<h3>Request</h3>
+		<pre class="http">
+DELETE / HTTP/1.1
+Host: <span class="http_replace">bucketName</span>.file.hisg.org
+Content-Length: 0
+Date: <span class="http_replace">date</span>
+Authorization: <span class="http_replace">signature</span></pre>
+		<h3>Response</h3>
+		<pre class="http">
+HTTP/1.1 204 No Content
+Date: <span class="http_replace">date</span>
+Content-Length: 0
+Connection: close
+Server: HISGUtaka</pre>
+	</div>
+</body>
+</html>

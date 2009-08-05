@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssreset/reset-min.css" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
+	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
+	<title>Utaka File Storage</title>	
+</head>
+<body>
+	<div class="title">
+		Utaka – A Cloud Storage Service
+	</div>
+	<img class="logo" src="images/utaka_fish_left.png" />
+	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<div class="content">
+		<h1>Utaka File Storage</h1>
+		<h3>Location</h3>
+		<p>Utaka can store its files almost anywhere you want. Local folders, external drive, NFS storage, or anything you can give a path to can be used. The <code class="file">.utaka_config</code> file under <code class="path">utaka/config/</code> contains an option for the filesystem path. All utaka disk access will be limited to that path.</p>
+		<h3>Organization</h3>
+		<p>Each bucket is given its own folder under the master path, and each object that will be stored in a bucket is placed in that bucket&#x27;s folder. However, that object is not given its key for a name. A SHA1 hash is generated for each object as its filename, and the first nine characters of the hash are also used to create three three-character folders. For example, say a user sends an object with key <code class="object">testfile.mp3</code> to bucket <code class="bucket">music</code>. Utaka will generate a SHA1 hash <code class="sha1">c85d23111b1b073d01af791da95cb2ac005df282</code> for the object. It then generates a path <code class="path">(Utaka File Storage Path)/music/c85/d23/111/</code> for the file and creates any new folders in the path. Then it creates the file with the filename <code class="file">c85d23111b1b073d01af791da95cb2ac005df282</code>. The entire path to the file will then be <code class="path">(Utaka File Storage Path)/music/c85/d23/111/c85d23111b1b073d01af791da95cb2ac005df282</code>.</p>
+		<h3>Benefits</h3>
+		<p>TODO</p>
+	</div>
+</body>
+</html>

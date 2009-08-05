@@ -1,12 +1,50 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>untitled</title>	
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssreset/reset-min.css" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
+	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
+	<title>Utaka Overview</title>	
 </head>
 <body>
-Please visit the <a href="http://wiki.github.com/mattmillr/utaka">Utaka wiki</a>.
+	<div class="title">
+		Utaka – A Cloud Storage Service
+	</div>
+	<img class="logo" src="images/utaka_fish_left.png" />
+	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<div class="content">
+		<h1>Utaka</h1>
+		<h3>Purpose and Beginnings</h3>
+		<p>The primary purpose behind Utaka is to create a simple cloud storage service that is API compatible with Amazon's Simple Storage Service (S3). Humanitarian International Services Group was looking for a way for its members to upload files to a central repository and allow other members to view and edit these files. S3 seemed like a good option, but the development team wanted to host their own service. Making Utaka API compatible had a dual benefit here. One, we could use other premade clients and libraries with little modification, and two, if we ever outgrow our own service, we can switch to S3 by changing only a few lines of code. The development team leader was also interested in making the project open source, to allow others to help with the project and set up there own cloud storage servers, so the project has been placed here on GitHub.</p>
+
+		<h3>Goals</h3>
+		<ul class="fish">
+			<li>To create a simple and stable cloud storage service.</li>
+			<li>To make a well documented and easy to understand open-souce project.</li>
+		</ul>
+
+		<h3>What Utaka Doesn't Do</h3>
+		<p>Currently Utaka is only in the alpha stage, so it is obviously not complete. But we are planning on not implementing some features from S3 initially:
+			<ul class="fish">
+				<li>SOAP API</li>
+				<li>Bucket Locations (these are simply ignored, attempting to use them doesn't cause errors)</li>
+				<li>Torrents</li>
+				<li>Requester Pays Buckets (since you host your own service no one pays)</li>
+			</ul>
+		</p>
+
+		<h3>What Utaka Does Differently</h3>
+		<ul class="fish">
+			<li>Logging (Only best-effort on S3, when activated Utaka will log every request and deliver the logs at a regular interval)</li>
+		</ul>
+
+		<h3>What You Need To Know</h3>
+		<p>This is a diagram of Utaka's basic design. Click on a section for more information.<br />
+			<object height="520" width="520" data="images/utaka_design_diagram.svg" type="image/svg+xml"></object>
+		</p>
+	</div>
 </body>
 </html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssreset/reset-min.css" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
+	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
+	<title>Utaka Database</title>	
+</head>
+<body>
+	<div class="title">
+		Utaka – A Cloud Storage Service
+	</div>
+	<img class="logo" src="images/utaka_fish_left.png" />
+	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<div class="content">
+		<h1>Utaka Database</h1>
+		<h3>Tables</h3>
+		<p>Utaka uses the following tables in its database:</p>
+		<div class="table_description">
+			<a name="user"></a>
+			<table class="database_table">
+				<tr><th colspan=6 class="table_name">user</th></tr>
+				<tr><th>Field</th>		<th>Type</th>					<th>Null</th>	<th>Key</th>		<th>Default</th>	<th>Extra</th></tr>
+				<tr><td>userid</td>		<td>BIGINT(20) UNSIGNED</td>	<td>NO</td>		<td>PRIMARY</td>	<td></td>			<td>auto_increment</td></tr>
+				<tr><td>username</td>	<td>VARCHAR(64)</td>			<td>NO</td>		<td>UNIQUE</td>		<td></td>			<td></td></tr>
+				<tr><td>accesskey</td>	<td>VARCHAR(40)</td>			<td>YES</td>	<td>UNIQUE</td>		<td></td>			<td></td></tr>
+				<tr><td>secretkey</td>	<td>VARCHAR(40)</td>			<td>YES</td>	<td>UNIQUE</td>		<td></td>			<td></td></tr>
+				<tr><td>isAdmin</td>	<td>Boolean</td>				<td>NO</td>		<td></td>			<td>FALSE</td>		<td></td></tr>
+			</table>
+			The <code class="table_name">user</code> table is used to store user information:
+			<ul class="fish">
+				<li><code class="field_name">userid</code> is an automatically assigned unique ID to link other records to this user.</li>
+				<li><code class="field_name">username</code> is a unique display name of the user.</li>
+				<li><code class="field_name">accesskey</code> is a unique 40 character key generated for each user. It is used to look up the users&#x27;s <code class="field_name">secretkey</code>.</li>
+				<li><code class="field_name">secretkey</code> is a unique 40 character key generated for each user. It is used to generate a message signature on each request.</li>
+			</ul>
+		</div>
+		<div class="table_description">
+			<a name="bucket"></a>
+			<table class="database_table">
+				<tr><th colspan=6 class="table_name">bucket</th></tr>
+				<tr><th>Field</th>					<th>Type</th>					<th>Null</th>	<th>Key</th>					<th>Default</th>	<th>Extra</th></tr>
+				<tr><td>userid</td>					<td>BIGINT(20) UNSIGNED</td>	<td>NO</td>		<td>FOREIGN user(userid)</td>	<td></td>			<td></td></tr>
+				<tr><td>bucket</td>					<td>VARCHAR(32)</td>			<td>NO</td>		<td>PRIMARY</td>				<td></td>			<td></td></tr>
+				<tr><td>bucket_creation_time</td>	<td>DATETIME</td>				<td>YES</td>	<td></td>						<td></td>		<td></td></tr>
+			</table>
+			The <code class="table_name">bucket</code> table is used to store bucket information:
+			<ul class="fish">
+				<li><code class="field_name">userid</code> is the userid of the owner of the bucket.</li>
+				<li><code class="field_name">bucket</code> is the unique name of the bucket.</li>
+				<li><code class="field_name">bucket_creation_time</code> is the date and time when the bucket was created.</li>
+			</ul>
+		</div>
+		<div class="table_description">
+			<a name="object"></a>
+			<table class="database_table">
+				<tr><th colspan=6 class="table_name">object</th></tr>
+				<tr><th>Field</th>					<th>Type</th>					<th>Null</th>	<th>Key</th>							<th>Default</th>				<th>Extra</th></tr>
+				<tr><td>userid</td>					<td>BIGINT(20) UNSIGNED</td>	<td>NO</td>		<td>FOREIGN user(userid)</td>			<td></td>						<td></td></tr>
+				<tr><td>object</td>					<td>VARCHAR(64)</td>			<td>NO</td>		<td>PRIMARY</td>						<td></td>						<td></td></tr>
+				<tr><td>bucket</td>					<td>VARCHAR(32)</td>			<td>NO</td>		<td>PRIMARY FOREIGN bucket(bucket)</td>	<td></td>						<td></td></tr>
+				<tr><td>hashfield</td>				<td>BLOB</td>					<td>YES</td>	<td>UNIQUE</td>							<td></td>						<td></td></tr>
+				<tr><td>object_create_time</td>		<td>DATETIME</td>				<td>YES</td>	<td></td>								<td></td>						<td></td></tr>
+				<tr><td>eTag</td>					<td>VARCHAR(32)</td>			<td>YES</td>	<td></td>								<td></td>						<td></td></tr>
+				<tr><td>object_mod_time</td>		<td>DATETIME</td>				<td>YES</td>	<td></td>								<td></td>						<td></td></tr>
+				<tr><td>content_type</td>			<td>VARCHAR(32)</td>			<td>YES</td>	<td></td>								<td>&#x27;binary/octet-stream&#x27;</td>	<td></td></tr>
+				<tr><td>content_disposition</td>	<td>VARCHAR(64)</td>			<td>YES</td>	<td></td>								<td></td>						<td></td></tr>
+				<tr><td>content_encoding</td>		<td>VARCHAR(32)</td>			<td>YES</td>	<td></td>								<td></td>						<td></td></tr>
+				<tr><td>size</td>					<td>INT UNSIGNED</td>			<td>YES</td>	<td></td>								<td></td>						<td></td></tr>
+			</table>
+			The <code class="table_name">object</code> table is used to store object information:
+			<ul class="fish">
+				<li><code class="field_name">userid</code> is the userid of the owner of the object.</li>
+				<li><code class="field_name">object</code> is the key or name of the object. It must be unique within its enclosing bucket.</li>
+				<li><code class="field_name">bucket</code> is the name of the bucket which holds the object.</li>
+				<li><code class="field_name">hashfield</code> is the unique SHA1 hash generated for each object. It is used to name the object in the file storage.</li>
+				<li><code class="field_name">object_create_time</code> is the date and time the object was created.</li>
+				<li><code class="field_name">eTag</code> is the MD5 hash of the object.</li>
+				<li><code class="field_name">object_mod_time</code> is the date and time the object was last modified.</li>
+				<li><code class="field_name">content_type</code> is the MIME type of the object.</li>
+				<li><code class="field_name">content_disposition</code> is the value of the Content-Disposition header in the lastest PUT (if the <a href="rest.html">REST API</a> is used.).</li>
+				<li><code class="field_name">content_encoding</code> is the value of the Content-Encoding header in the lastest PUT (if the <a href="rest.html">REST API</a> is used.).</li>
+				<li><code class="field_name">size</code> is the size of the object in bytes.</li>
+			</ul>
+		</div>
+		<div class="table_description">
+			<a name="bucket_permission"></a>
+			<table class="database_table">
+				<tr><th colspan=6 class="table_name">bucket_permission</th></tr>
+				<tr><th>Field</th>		<th>Type</th>															<th>Null</th>	<th>Key</th>							<th>Default</th>	<th>Extra</th></tr>
+				<tr><td>userid</td>		<td>BIGINT(20) UNSIGNED</td>											<td>NO</td>		<td>PRIMARY FOREIGN user(userid)</td>	<td></td>			<td></td></tr>
+				<tr><td>bucket</td>		<td>VARCHAR(32)</td>													<td>NO</td>		<td>PRIMARY FOREIGN bucket(bucket)</td>	<td></td>			<td></td></tr>
+				<tr><td>permission</td>	<td>ENUM(&#x27;read&#x27;, &#x27;write&#x27;, &#x27;read_acp&#x27;, &#x27;write_acp&#x27;, &#x27;full_control&#x27;)</td>	<td>NO</td>		<td>PRIMARY</td>						<td></td>			<td></td></tr>
+			</table>
+			The <code class="table_name">bucket_permission</code> table is used to store user permissions on buckets.
+			<ul class="fish">
+				<li><code class="field_name">userid</code> is the userid of the user to whom the permission applies.</li>
+				<li><code class="field_name">bucket</code> is the name of the bucket to which the permission applies.</li>
+				<li><code class="field_name">permission</code> is the permission which is being assigned to the user on the bucket.</li>
+			</ul>
+		</div>
+		<div class="table_description">
+			<a name="object_permission"></a>
+			<table class="database_table">
+				<tr><th colspan=6 class="table_name">object_permission</th></tr>
+				<tr><th>Field</th>		<th>Type</th>															<th>Null</th>	<th>Key</th>							<th>Default</th>	<th>Extra</th></tr>
+				<tr><td>userid</td>		<td>BIGINT(20) UNSIGNED</td>											<td>NO</td>		<td>PRIMARY FOREIGN user(userid)</td>	<td></td>			<td></td></tr>
+				<tr><td>bucket</td>		<td>VARCHAR(32)</td>													<td>NO</td>		<td>PRIMARY FOREIGN bucket(bucket)</td>	<td></td>			<td></td></tr>
+				<tr><td>object</td>		<td>VARCHAR(64)</td>													<td>NO</td>		<td>PRIMARY FOREIGN object(object)</td>	<td></td>			<td></td></tr>
+				<tr><td>permission</td>	<td>ENUM(&#x27;read&#x27;, &#x27;write&#x27;, &#x27;read_acp&#x27;, &#x27;write_acp&#x27;, &#x27;full_control&#x27;)</td>	<td>NO</td>		<td>PRIMARY</td>						<td></td>			<td></td></tr>
+			</table>
+			The <code class="table_name">object_permission</code> table is used to store user permissions on objects.
+			<ul class="fish">
+				<li><code class="field_name">userid</code> is the userid of the user to whom the permission applies.</li>
+				<li><code class="field_name">bucket</code> is the name of the bucket which holds the object.</li>
+				<li><code class="field_name">object</code> is the name of the object to which the permission applies.</li>
+				<li><code class="field_name">permission</code> is the permission which is being assigned to the user on the object.</li>
+			</ul>
+		</div>
+		<div class="table_description">
+			<a name="object_metadata"></a>
+			<table class="database_table">
+				<tr><th colspan=6 class="table_name">object_metadata</th></tr>
+				<tr><th>Field</th>		<th>Type</th>			<th>Null</th>	<th>Key</th>							<th>Default</th>	<th>Extra</th></tr>
+				<tr><td>bucket</td>		<td>VARCHAR(32)</td>	<td>NO</td>		<td>PRIMARY FOREIGN bucket(bucket)</td>	<td></td>			<td></td></tr>
+				<tr><td>object</td>		<td>VARCHAR(64)</td>	<td>NO</td>		<td>PRIMARY FOREIGN object(object)</td>	<td></td>			<td></td></tr>
+				<tr><td>type</td>		<td>VARCHAR(64)</td>	<td>NO</td>		<td>PRIMARY</td>	<td></td>			<td></td></tr>
+				<tr><td>value</td>		<td>VARCHAR(64)</td>	<td>NO</td>		<td>PRIMARY</td>	<td></td>			<td></td></tr>
+			</table>
+			The <code class="table_name">object_metadata</code> table is used to store custom metadata for objects.
+			<ul class="fish">
+				<li><code class="field_name">bucket</code> is the name of the bucket which holds the object.</li>
+				<li><code class="field_name">object</code> is the name of the object to which the metadata is linked.</li>
+				<li><code class="field_name">type</code> is the name of the metadata.</li>
+				<li><code class="field_name">value</code> is the value of the metadata.</li>
+		</div>
+	</div>
+</body>
+</html>

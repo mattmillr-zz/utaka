@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssreset/reset-min.css" />
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
+	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
+	<title>Utaka REST API – Service</title>	
+</head>
+<body>
+	<div class="title">
+		Utaka – A Cloud Storage Service
+	</div>
+	<img class="logo" src="images/utaka_fish_left.png" />
+	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<div class="content">
+		<h1>Utaka REST API – Service</h1>
+		<h2><span class="code">GET</span> Service</h2>
+		<p class="rest_method_description">The <code class="http_method">GET</code> method on the service will return a list of buckets owner by the request sender. It is currently the only REST method directed on the service.</p>
+		<h3>Request</h3>
+		<pre class="http">
+GET / HTTP/1.1
+Host: file.hisg.org
+Date: <span class="http_replace">date</span>
+Authorization: <span class="http_replace">signature</span></pre>
+		<h3>Response</h3>
+		<pre class="http">
+HTTP/1.1 200 OK
+Date: <span class="http_replace">date</span>
+Content-Type: <span class="http_replace">type</span>
+Content-Length: <span class="http_replace">length</span>
+Connection: close
+Server: HISGUtaka
+
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;ListAllMyBucketsResult xmlns=&quot;http://mattmillr.github.com/utaka&quot;&gt;
+  &lt;Owner&gt;
+    &lt;ID&gt;<span class="http_replace">user_id</span>&lt;/ID&gt;
+    &lt;DisplayName&gt;<span class="http_replace">display_name</span>&lt;/DisplayName&gt;
+  &lt;/Owner&gt;
+  &lt;Buckets&gt;
+    &lt;Bucket&gt;
+      &lt;Name&gt;<span class="http_replace">bucket_name</span>&lt;/Name&gt;
+      &lt;CreationDate&gt;<span class="http_replace">date</span>&lt;/CreationDate&gt;
+    &lt;/Bucket&gt;
+    ...
+  &lt;/Buckets&gt;
+&lt;/ListAllMyBucketsResult&gt;</pre>
+		<h3>Headers/Elements</h3>
+		<table class="rest_description">
+			<tr><th>Name</th><th>Description</th></tr>
+			<tr>
+				<td><a name="ListAllMyBucketsResult"></a><code class="xml_element_name">ListAllMyBucketsResult</code></td>
+				<td>
+					Root element.<br />
+					Children: <a href="#Owner" class="code xml_element_name">Owner</a> and <a href="#Buckets" class="code xml_element_name">Buckets</a><br />
+					Parent: None
+				</td>
+			</tr>
+			<tr>
+				<td><a name="Owner"></a><code class="xml_element_name">Owner</code></td>
+				<td>
+					Contains information about the bucket&#x27;s owner.<br />
+					Children: <a href="#ID" class="code xml_element_name">ID</a> and <a href="#DisplayName" class="code xml_element_name">DisplayName</a><br />
+					Parent: <a href="#ListAllMyBucketsResult" class="code xml_element_name">ListAllMyBucketsResult</a>
+				</td>
+			</tr>
+			<tr>
+				<td><a name="ID"></a><code class="xml_element_name">ID</code></td>
+				<td>
+					The owner&#x27;s unique ID.<br />
+					Data: Integer<br />
+					Parent: <a href="#Owner" class="code xml_element_name">Owner</a>
+				</td>
+			</tr>
+			<tr>
+				<td><a name="DisplayName"></a><code class="xml_element_name">DisplayName</code></td>
+				<td>
+					The owner&#x27;s unique name.<br />
+					Data: String<br />
+					Parent: <a href="#Owner" class="code xml_element_name">Owner</a>
+				</td>
+			</tr>
+			<tr>
+				<td><a name="Buckets"></a><code class="xml_element_name">Buckets</code></td>
+				<td>
+					Contains a list of buckets.<br />
+					Children: <a href="#Bucket" class="code xml_element_name">Bucket</a><br />
+					Parent: <a href="#ListAllMyBucketsResult" class="code xml_element_name">ListAllMyBucketsResult</a>
+				</td>
+			</tr>
+			<tr>
+				<td><a name="Name"></a><code class="xml_element_name">Name</code></td>
+				<td>
+					The bucket&#x27;s unique name.<br />
+					Data: String<br />
+					Parent: <a href="#Bucket" class="code xml_element_name">Bucket</a>
+				</td>
+			</tr>
+			<tr>
+				<td><a name="CreationDate"></a><code class="xml_element_name">CreationDate</code></td>
+				<td>
+					The date the bucket was created.<br />
+					Data: String (Date formatted)<br />
+					Parent: <a href="#Bucket" class="code xml_element_name">Bucket</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
