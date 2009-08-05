@@ -12,25 +12,12 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-[common]
+import ConfigParser
 
-#package_base_path : /var/lib/html/utaka/
-customHeaderPrefix : x-amz-
-subresource : acl,location,logging,torrent
-filesystem_path : /var/www/html/utaka/files/
+configFile = "/var/www/html/utaka/config/.utaka_config"
+config = ConfigParser.ConfigParser()
 
-[server]
+config.read(configFile)
 
-hostname : b.aburke.vv
-
-[database]
-
-mysql_utaka_hostname : localhost
-mysql_utaka_username : root
-mysql_utaka_password : aburke
-mysql_utaka_database : utaka
-
-[authentication]
-
-header : Authorization
-prefix : AWS
+def get (section, key):
+	return config.get(section, key)

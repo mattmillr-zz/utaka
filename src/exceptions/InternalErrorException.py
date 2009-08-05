@@ -32,6 +32,13 @@ class DatabaseErrorException(InternalErrorException):
 			 'Message' : str(databaseError),
 			 'DbErrCode' : str(databaseError.args[0]),
 			 'DbErrDetails' : str(databaseError.args[1])})
+			 
+class DatabaseIntegrityErrorException(InternalErrorException):
+	def __init__(self, dbIntegrityError):
+		InternalErrorException.__init__(self,
+			{'Code' : 'DatabaseIntegrityError',
+			 'Class' : dbIntegrityError.__class__,
+			 'Message' : dbIntegrityError})
 
 class GeneralErrorException(InternalErrorException):
 	def __init__(self, exception):
@@ -39,3 +46,16 @@ class GeneralErrorException(InternalErrorException):
 			{'Code' : 'GeneralError',
 			 'Class' : str(exception.__class__),
 			 'Message' : str(exception)})
+			 
+class HashfieldCollisionErrorException(InternalErrorException):
+	def __init__(self, hashfield):
+		InternalErrorException.__init__(self,
+			{'Code' : 'HashfieldCollisionError',
+			 'Hashfield' : str(hashfield),
+			 'Message' : 'A unique hashfield was not found.'})
+
+class KeyCollisionErrorException(InternalErrorException):
+	def __init__(self):
+		InternalErrorException.__init__(self,
+			{'Code' : 'KeyCollisionError',
+			 'Message' : 'A unique accesskey and secretkey could not be found.'})

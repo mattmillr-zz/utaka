@@ -9,7 +9,8 @@ __all__ = [
 	'MovedTemporarilyException',
 	'NotFoundException',
 	'NotImplementedException',
-	'PreconditionFailException',
+	'NotModifiedException', 
+	'PreconditionFailedException',
 	'RequestedRangeNotSatisfiableException',
 	'ServiceUnavailableException',
 	'UtakaException'

@@ -14,8 +14,8 @@
 
 from mod_python import apache
 from mod_python import util
-from utaka.src.rest.HMAC_SHA1_Authentication import getUser
-import utaka.src.config as config
+from utaka.src.authentication.HMAC_SHA1_Authentication import getUser
+import utaka.src.Config as Config
 import utaka.src.exceptions.BadRequestException as BadRequestException
 
 
@@ -35,7 +35,8 @@ class UtakaRequest:
 	def __init__(self, req, virtualBucket=False):
 
 		self.req = req
-		self.bucket = self.key = self.user = self.accesskey = self.signature = self.stringToSign = None
+		self.bucket = self.key = self.user = self.accesskey = self.signature = self.stringToSign = self.computedSig = None
+		self.isUserAdmin = False
 		self.subresources = {}
 		self.__writeBuffer = ''
 		self.virtualBucket = False
@@ -43,18 +44,9 @@ class UtakaRequest:
 		#Query string digest
 		if self.req.args:
 			self.subresources = util.parse_qs(self.req.args, True)
-			if 'logging' in self.subresources:
-				if 'acl' in self.subresources or 'torrent' in self.subresources or 'location' in self.subresources:
-					'''raise error'''
-			elif 'acl' in self.subresources:
-				if 'torrent' in self.subresources or 'location' in self.subresources:
-					'''raise error'''
-			elif 'torrent' in self.subresources:
-				if 'location' in self.subresources:
-					'''raise error'''
 
 		#URI digest
-		basehost = config.get('server', 'hostname')
+		basehost = Config.get('server', 'hostname')
 		if self.req.hostname == basehost:
 			uriDigestResults = self.uriDigest(req.uri)
 			self.bucket = uriDigestResults.get('bucket')
@@ -71,36 +63,31 @@ class UtakaRequest:
 				raise Exception, 'wrong hostname?'
 
 		#custom header table
-		try:
-			self.customHeaderPrefix = config.get('common', 'customHeaderPrefix').lower()
-		except Exception:
-			raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
-		else:
-			self.customHeaderTable = {}
-			for val in self.req.headers_in.keys():
-				if val.lower().startswith(self.customHeaderPrefix):
-					self.customHeaderTable[val.lower()[len(self.customHeaderPrefix):]] = self.req.headers_in[val]
+		self.customHeaderPrefix = Config.get('common', 'customHeaderPrefix').lower()
+		self.customHeaderTable = {}
+		for tag, val in self.req.headers_in.iteritems():
+			if tag.lower().startswith(self.customHeaderPrefix):
+				self.customHeaderTable[tag.lower()[len(self.customHeaderPrefix):]] = val
 
 		#authenticate -- must happen after custom header table is created
 		self.accesskey, self.signature = self.__getAccessKeyAndSignature()
 		if self.accesskey:
 			self.stringToSign = self.__buildStringToSign()
-			self.user, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
+			self.user, self.isUserAdmin, self.computedSig = getUser(self.signature, self.accesskey, self.stringToSign)
 
 		#Check date
 		#check customDateHeader then date header
 
 		if 'signature' in self.subresources:
-			self.req.headers_out['Signature'] = self.computedSig
-			self.write(self.computedSig + "\r\n")
-			self.write(self.stringToSign + "\r\n")
+			self.req.headers_out['Signature'] = str(self.computedSig)
+			self.write(str(self.computedSig) + "\r\n")
+			self.write(str(self.stringToSign) + "\r\n")
 			self.send()
 
 	def write(self, msg):
 		self.__writeBuffer += msg
 
 	def send(self):
-		#self.req.content_type = 'application/xml'
 		self.req.set_content_length(len(self.__writeBuffer))
 		self.req.write(self.__writeBuffer)
 
@@ -126,7 +113,7 @@ class UtakaRequest:
 		dateString = self.req.headers_in.get('date', '')
 
 		#Canonicalize Custom Headers
-		__customHeaderPrefix = config.get('common', 'customHeaderPrefix').lower()
+		__customHeaderPrefix = Config.get('common', 'customHeaderPrefix').lower()
 		__customDateHeader = __customHeaderPrefix + "-date"
 
 		customHeaderList = []
@@ -147,7 +134,7 @@ class UtakaRequest:
 		if self.virtualBucket:
 			uriString = "/" + urllib.quote(self.bucket)
 		uriString += (self.req.unparsed_uri).split('?')[0]
-		for val in ('acl', 'location', 'logging', 'torrent'):
+		for val in ('location', 'acl', 'logging', 'torrent'):
 			#self.write("CHECKING FOR ACL\r\n")
 			if val in self.subresources:
 				#self.write("FOUND ACL\r\n")
@@ -157,8 +144,8 @@ class UtakaRequest:
 
 
 	def __getAccessKeyAndSignature(self):
-		header = config.get('authentication', 'header')
-		prefix = config.get('authentication', 'prefix') + ' '
+		header = Config.get('authentication', 'header')
+		prefix = Config.get('authentication', 'prefix') + ' '
 		accesskey = signature = None
 		try:
 			authString = self.req.headers_in[header]
@@ -166,11 +153,26 @@ class UtakaRequest:
 			pass
 		else:
 			splitAuth = authString.split(prefix)
-			if len(splitAuth) == 2 and len(splitAuth[0]) == 0 and splitAuth[1].find(' ') < 0:
+			if len(splitAuth) == 2 and len(splitAuth[0]) == 0 and not splitAuth[1].startswith(' '):
 				try:
 					accesskey, signature = splitAuth[1].split(':')
 				except ValueError:
-					raise BadRequestException.InvalidAuthorizationException(argValue = authString)
+					raise BadRequestException.InvalidArgumentAuthorizationException(argValue = authString)
+			elif not len(splitAuth) == 2:
+				raise BadRequestException.InvalidArgumentAuthorizationException(argValue = authString)
 			else:
-				raise BadRequestException.InvalidAuthorizationException(argValue = authString)
+				raise BadRequestException.InvalidArgumentAuthorizationSpacingException(argValue = authString)
 		return accesskey, signature
+
+	def validateSubresources(self):
+		if 'location' in self.subresources:
+			for val in ('acl', 'logging', 'torrent'):
+				if val in self.subresources:
+					raise BadRequest.InvalidArgumentQueryStringConflictException(val, 'location')
+		elif 'acl' in self.subresources:
+			for val in('logging', 'torrent'):
+				if val in self.subresources:
+					raise BadRequest.InvalidArgumentQueryStringConflictException(val, 'acl')
+		elif 'logging' in self.subresources:
+			if 'torrent' in self.subresources:
+				raise BadRequest.InvalidArgumentQueryStringConflictException('torrent', 'logging')

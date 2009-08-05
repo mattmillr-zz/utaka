@@ -17,25 +17,31 @@ import xml.dom.minidom
 import utaka.src.core.BucketWithACPAndLog as Bucket
 import utaka.src.accessControl.BucketACP as BucketACP
 import utaka.src.accessControl.AcpXml as AcpXml
+import utaka.src.exceptions.MethodNotAllowedException as MethodNotAllowedException
+import utaka.src.exceptions.BadRequestException as BadRequestException
 
 class UtakaBucket:
 
 	def __init__(self, utakaReq):
 		self.utakaReq = utakaReq
 
-
 	def handleRequest(self):
-
+		if 'torrent' in self.utakaReq.subresources:
+			raise BadRequestException.RequestTorrentOfBucketErrorException()
 		if 'acl' in self.utakaReq.subresources:
 			if self.utakaReq.req.method == 'GET':
 				operation = self.__getAclOperation
 			elif self.utakaReq.req.method == 'PUT':
 				operation = self.__putAclOperation
+			else:
+				raise MethodNotAllowedException.ACLMethodNotAllowed(self.utakaReq.req.method)
 		elif 'logging' in self.utakaReq.subresources:
 			if self.utakaReq.req.method == 'GET':
 				operation = self.__getLoggingOperation
 			elif self.utakaReq.req.method == 'PUT':
 				operation = self.__putLoggingOperation
+			else:
+				raise MethodNotAllowedException.LoggingStatusMethodNotAllowed(self.utakaReq.req.method)
 		elif self.utakaReq.req.method == 'GET':
 			operation = self.__getOperation
 		elif self.utakaReq.req.method == 'PUT':
@@ -46,7 +52,8 @@ class UtakaBucket:
 			operation = self.__postOperation
 		elif self.utakaReq.req.method == 'COPY':
 			operation = self.__copyOperation
-
+		else:
+			raise MethodNotAllowedException.BucketMethodNotAllowedException(self.utakaReq.req.method)
 		return operation()
 
 
@@ -60,6 +67,7 @@ class UtakaBucket:
 
 	def __deleteOperation(self):
 		result = Bucket.destroyBucket(bucket=self.utakaReq.bucket, user=self.utakaReq.user)
+		self.utakaReq.req.status = 204
 
 
 	def __putOperation(self):
@@ -120,7 +128,7 @@ class UtakaBucket:
 
 
 	def __getXMLResponse(self, bucketDictionary, contentDictionaryList, commonPrefixesList):
-	
+
 		doc = xml.dom.minidom.Document()
 		listBucketEl = doc.createElement("ListBucketResult")
 

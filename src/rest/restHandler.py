@@ -18,7 +18,13 @@ from utaka.src.exceptions import *
 #message handler
 
 def handler(req):
+	utakaLog = open('/var/www/html/utaka/utakaLog', 'a')
+	try:
+		utakaLog.write('Client Connected on connection: %s\r\n' % req.connection.id)
+	finally:
+		utakaLog.close()
 	debug = True
+	utakaRequest = None
 	try:
 		utakaRequest = UtakaRequest(req)
 		if utakaRequest.key:
@@ -31,34 +37,31 @@ def handler(req):
 			from utaka.src.rest.UtakaService import UtakaService
 			restResource = UtakaService(utakaRequest)
 		restResource.handleRequest()
+		utakaRequest.send()
 	except Exception, e:
+		dev = bool(utakaRequest and utakaRequest.isUserAdmin)
 		if not isinstance(e, UtakaException.UtakaException):
-			e = InternalErrorException.GeneralErrorException(e)
+			if dev:
+				req.status = 500
+				raise
+			else:
+				e = InternalErrorException.GeneralErrorException(e)
 		req.status = e.httpStatus
-		import xml.dom.minidom
-		doc = xml.dom.minidom.Document()
-		errorEl = doc.createElement("Error")
-		for key, val in e.args.iteritems():
-			keyEl = doc.createElement(str(key))
-			keyEl.appendChild(doc.createTextNode(str(val)))
-			errorEl.appendChild(keyEl)
-		if debug:
-			debugEl = doc.createElement("Debug")
-			import traceback
-			tracebackEl = doc.createElement("Traceback")
-			tracebackEl.appendChild(doc.createTextNode(str(traceback.format_exc())))
-			debugEl.appendChild(tracebackEl)
-			if 'devArgs' in e.__dict__.keys():
-				for key, val in e.devArgs.iteritems():
-					keyEl = doc.createElement(str(key))
-					keyEl.appendChild(doc.createTextNode(str(val)))
-					debugEl.appendChild(keyEl)
-			errorEl.appendChild(debugEl)
-		doc.appendChild(errorEl)
+		e.args['RequestId'] = str(req.connection.id)
+		errOutput = e.toxml(True)
 		req.content_type = 'application/xml'
-		errOutput = doc.toxml('utf-8')
 		req.content_length = len(errOutput)
 		req.write(errOutput)
+		utakaLog = open('/var/www/html/utaka/utakaLog', 'a')
+		try:
+			utakaLog.write('Client Disconnected with error\r\n')
+		finally:
+			utakaLog.close()
 	else:
-		utakaRequest.send()
+		utakaLog = open('/var/www/html/utaka/utakaLog', 'a')
+		try:
+			utakaLog.write('Client Disconnected without error\r\n')
+		finally:
+			utakaLog.close()
+	
 	return apache.OK

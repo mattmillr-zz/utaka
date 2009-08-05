@@ -15,12 +15,14 @@
 import utaka.src.core.ObjectWithACP as Object
 import utaka.src.accessControl.ObjectACP as ObjectACP
 import utaka.src.accessControl.AcpXml as AcpXml
+import utaka.src.exceptions.MethodNotAllowedException as MethodNotAllowedException
 
 
 class UtakaObject:
 
 	def __init__(self, utakaReq):
 		self.utakaReq = utakaReq
+		self.utakaReq.validateSubresources()
 
 
 	def handleRequest(self):
@@ -30,7 +32,7 @@ class UtakaObject:
 			elif self.utakaReq.req.method == 'PUT':
 				operation = self.__putAclOperation
 			else:
-				'''raise error'''
+				raise MethodNotAllowedException.ACLMethodNotAllowedException(self.utakaReq.req.method)
 		elif self.utakaReq.req.method == 'GET':
 			operation = self.__getOperation
 		elif self.utakaReq.req.method == 'PUT':
@@ -43,17 +45,16 @@ class UtakaObject:
 			operation = self.__copyOperation
 		elif self.utakaReq.req.method == 'DELETE':
 			operation = self.__deleteOperation
+		else:
+			raise MethodNotAllowedException.ObjectMethodNotAllowedException(self.utakaReq.req.method)
 
 		return operation()
 
 
 	def __getAclOperation(self):
 		object_acp = Object.getObjectACP(self.utakaReq.user, self.utakaReq.bucket, self.utakaReq.key)
-		if not object_acp:
-			'''object not found, throw error'''
-		else:
-			self.utakaReq.req.content_type = 'application/xml'
-			self.utakaReq.write(AcpXml.toXML(object_acp))
+		self.utakaReq.req.content_type = 'application/xml'
+		self.utakaReq.write(AcpXml.toXML(object_acp))
 
 
 	def __putAclOperation(self):
@@ -84,7 +85,7 @@ class UtakaObject:
 			if skey == self.utakaReq.key:
 				'''cannot copy same object unless directive set to replace, raise error'''
 		else:
-			'''directive must be copy or replace, raise error'''
+			raise BadRequestException.InvalidArgumentMetadataDirectiveException(metadataDirective)
 		result = cloneObject(self.utakaReq.user, sbucket, skey, self,utakaReq.bucket, self.utakaReq.key, metadata, self.utakaReq.customHeadersTable.get('if-match'), self.utakaReq.customHeadersTable.get('if-none-match'), self.utakaReq.customHeadersTable.get('if-modified-since'), self.utakaReq.customHeadersTable.get('if-unmodified-since'))
 
 
@@ -150,6 +151,7 @@ class UtakaObject:
 
 	def __deleteOperation(self):
 		result = Object.destroyObject(key = self.utakaReq.key, bucket = self.utakaReq.bucket, user = self.utakaReq.user)
+		self.utakaReq.req.status = 204
 
 
 	def __digestRange(self):
