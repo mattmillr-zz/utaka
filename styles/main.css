@@ -4,7 +4,7 @@ html {
 
 body {
 	background-position: top left;
-	background-image: url(../images/grey_gradient.png);
+	background-image: url("../images/grey_gradient.png");
 	background-repeat: repeat-y;
 	font-family: sans-serif;
 	padding: 15px;
@@ -29,7 +29,7 @@ div.content {
 	position: absolute;
 	top: 100px;
 	left: 100px;
-	right: 275px;
+	right: 325px;
 }
 
 div.under_h4 {
@@ -53,8 +53,8 @@ object.right_sidebar {
 	top: 250px;
 	right: 25px;
 	
-	width: 200px;
-	height: 400px;
+	width: 250px;
+	height: 500px;
 	border-width: 2px;
 	border-style: solid;
 	border-color: #000000;
@@ -68,10 +68,11 @@ div.table_description {
 	padding-bottom: 20px;
 }
 
-*.menu_parent>*.menu_hidden {
+*.menu_parent>*.menu_hidden, *.menu_parent>*.menu_hidden_inline {
 	position: absolute;
 	top: inherit;
 	left: inherit;
+	min-width: 150px;
 	background-color: #ffffff;
 	padding-top: 5px;
 	padding-right: 5px;
@@ -84,10 +85,18 @@ div.table_description {
 	display: block;
 }
 
+*.menu_parent:hover>*.menu_hidden_inline {
+	display: inline;
+}
+
+*.menu_parent:hover {
+	background-color: #00ffff;
+}
+
 img.logo {
 	position: fixed;
 	top: 50px;
-	right: 10px;
+	right: 25px;
 }
 
 h1 {
@@ -110,25 +119,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ul.no_indent {
-	margin: 0px;
-	padding-left: 2px;
+	margin-top: 0px;
+	margin-bottom: 0px;
 }
 
-ul.no_indent li {
-	list-style-position: inside;
+li.expandable {
+	list-style-image: url("../images/bucket_16_icon.png");
 }
 
-ul.fish li {
-	list-style-image: url(../images/utaka_16_icon.png);
+li.expandable:hover {
+	background-color: #ddffff;
+}
+
+ul.fish>li, li.leaf {
+	list-style-image: url("../images/utaka_16_icon.png");
+}
+
+*.hidden {
+	display: none;
+	margin-left: 10px;
 }
 
 a:link {
-	color: #0025ff;
+	color: #00cccc;
 	text-decoration: none;
 }
 
 a:visited {
-	color: #ff2e32;
+	color: #0025ff;
 	text-decoration: none;
 }
 
@@ -139,7 +157,7 @@ a:hover {
 }
 
 a:active {
-	color: #00dddd;
+	color: #ff2e32;
 	text-decoration: none;
 }
 

@@ -7,14 +7,15 @@
 	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
 	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
 	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
-	<title>Utaka REST API – Service</title>	
+	<title>Utaka REST API – Service</title>
+	<script type="text/javascript" charset="utf-8" src="scripts/main.js"></script>
 </head>
-<body>
+<body onresize="navResize();" onload="navResize();">
 	<div class="title">
 		Utaka – A Cloud Storage Service
 	</div>
 	<img class="logo" src="images/utaka_fish_left.png" />
-	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<object id="nav" class="right_sidebar" data="nav.html" type="text/html"></object>
 	<div class="content">
 		<h1>Utaka REST API – Service</h1>
 		<h2><span class="code">GET</span> Service</h2>
@@ -71,7 +72,7 @@ Server: HISGUtaka
 				<td><a name="ID"></a><code class="xml_element_name">ID</code></td>
 				<td>
 					The owner&#x27;s unique ID.<br />
-					Data: Integer<br />
+					Data: String (restricted to integers)<br />
 					Parent: <a href="#Owner" class="code xml_element_name">Owner</a>
 				</td>
 			</tr>

@@ -7,14 +7,15 @@
 	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
 	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
 	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
-	<title>Utaka REST API – Bucket</title>	
+	<title>Utaka REST API – Bucket</title>
+	<script type="text/javascript" charset="utf-8" src="scripts/main.js"></script>
 </head>
-<body>
+<body onresize="navResize();" onload="navResize();">
 	<div class="title">
 		Utaka – A Cloud Storage Service
 	</div>
 	<img class="logo" src="images/utaka_fish_left.png" />
-	<object class="right_sidebar" data="nav.html" type="text/html"></object>
+	<object id="nav" class="right_sidebar" data="nav.html" type="text/html"></object>
 	<div class="content">
 		<h1>Utaka REST API – Bucket</h1>
 		<a name="get_bucket"></a>
@@ -47,7 +48,7 @@ Authorization: <span class="http_replace">signature</span></pre>
 					</td>
 				</tr>
 				<tr>
-					<td><a name="max-keys"></a><code class="xml_element_name">max-keys</code></td>
+					<td><a name="max-keys"></a><code class="rest_parameter_name">max-keys</code></td>
 					<td>
 						The maximum number of objects that should be returned. Can return less than <code class="rest_parameter_name">max-keys</code>.<br />
 						Data: String (restricted to integers)<br />
@@ -55,7 +56,7 @@ Authorization: <span class="http_replace">signature</span></pre>
 					</td>
 				</tr>
 				<tr>
-					<td><a name="delimiter"></a><code class="xml_element_name">delimiter</code></td>
+					<td><a name="delimiter"></a><code class="rest_parameter_name">delimiter</code></td>
 					<td>
 						Groups objects together that have the same string between <code class="rest_parameter_name">prefix</code> and <code class="rest_parameter_name">delimiter</code>.<br />
 						Data: String<br />
@@ -138,6 +139,14 @@ Server: HISGUtaka
 					</td>
 				</tr>
 				<tr>
+					<td><a name="IsTruncated"></a><code class="xml_element_name">IsTruncated</code></td>
+					<td>
+						Returns true if the results are truncated, and false when all objects are returned.<br />
+						Data: String (<code>&#x27;true&#x27;</code>|<code>&#x27;false&#x27;</code>)<br />
+						Parent: <a href="#ListBucketResult" class="code xml_element_name">ListBucketResult</a>
+					</td>
+				</tr>
+				<tr>
 					<td><a name="Contents"></a><code class="xml_element_name">Contents</code></td>
 					<td>
 						Contains an object&#x27;s information.<br />
@@ -157,7 +166,7 @@ Server: HISGUtaka
 					<td><a name="LastModified"></a><code class="xml_element_name">LastModified</code></td>
 					<td>
 						The date the object was last modified.<br />
-						Data: String (Date formatted)<br />
+						Data: String (date format)<br />
 						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
 					</td>
 				</tr>
@@ -180,8 +189,8 @@ Server: HISGUtaka
 				<tr>
 					<td><a name="StorageClass"></a><code class="xml_element_name">StorageClass</code></td>
 					<td>
-						Amazon has it, but they don't even use it.<br />
-						Data: &#x27;STANDARD&#x27;<br />
+						Static header.<br />
+						Data: <code>&#x27;STANDARD&#x27;</code><br />
 						Parent: <a href="#Contents" class="code xml_element_name">Contents</a>
 					</td>
 				</tr>
@@ -197,7 +206,7 @@ Server: HISGUtaka
 					<td><a name="ID"></a><code class="xml_element_name">ID</code></td>
 					<td>
 						The owner&apos;s unique ID.<br />
-						Data: Integer<br />
+						Data: String (restricted to integers)<br />
 						Parent: <a href="#Owner" class="code xml_element_name">Owner</a>
 					</td>
 				</tr>

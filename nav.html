@@ -7,36 +7,115 @@
 	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0b1/build/cssbase/base-min.css" />
 	<link rel="stylesheet" href="styles/main.css" type="text/css" media="screen" charset="utf-8" />
 	<link rel="shortcut icon" href="images/utaka_16_icon.png" type="image/x-icon" />
-	<title>Utaka Overview</title>	
+	<title>Utaka Overview</title>
+	<script type="text/javascript" charset="utf-8">
+	<!--
+		function expand(element, hidden, test)
+		{
+			test.value = 'true';
+			element.style.listStyleImage="url('images/bucket_tipped_16_icon.png')";
+			hidden.style.display="block";
+		}
+		
+		function collapse(element, hidden, test)
+		{
+			test.value = 'false';
+			element.style.listStyleImage="url('images/bucket_16_icon.png')";
+			hidden.style.display="none";
+		}
+		
+		function change(element, hidden, test)
+		{
+			if (test.value == 'true')
+				collapse(element, hidden, test);
+			else
+				expand(element, hidden, test);
+		}
+		
+		function expandAll()
+		{
+			var menus = document.getElementsByName('menu');
+			var states = document.getElementsByName('state');
+			var data_groups = document.getElementsByName('data');
+			var count = menus.length;
+			if (count != states.length || count != data_groups.length)
+				return;
+			for (var i=0;i<count;i++)
+				expand(menus[i], data_groups[i], states[i]);
+		}
+		
+		function collapseAll()
+		{
+			var menus = document.getElementsByName('menu');
+			var states = document.getElementsByName('state');
+			var data_groups = document.getElementsByName('data');
+			var count = menus.length;
+			if (count != states.length || count != data_groups.length)
+				return;
+			for (var i=0;i<count;i++)
+				collapse(menus[i], data_groups[i], states[i]);
+		}
+		
+		function restoreIcon(element, test)
+		{
+			if (test.value == 'true')
+				element.style.listStyleImage="url('images/bucket_tipped_16_icon.png')";
+			else
+				element.style.listStyleImage="url('images/bucket_16_icon.png')";
+		}
+	//-->
+	</script>
 </head>
 <body class="nav">
 	<div>
 		<p>
 			<a href="index.html" target="_parent">Home</a>
 		</p>
-		Utaka Design Sections:
-		<ul class="no_indent fish">
-			<li class="menu_parent"><a href="rest.html" target="_parent">REST</a>
-				<ul class="menu_hidden no_indent fish">
-					<li><a href="rest_service.html" target="_parent">Service</a></li>
-					<li><a href="rest_bucket.html" target="_parent">Bucket</a></li>
-					<li><a href="rest_object.html" target="_parent">Object</a></li>
-					<li><a href="rest_authentication.html" target="_parent">Authentication</a></li>
-				</ul>
+		Utaka Design Sections: <br />
+		<a href="javascript: expandAll();">Expand All</a> <a href="javascript: collapseAll();">Collapse All</a>
+		<ul class="no_indent">
+			<li name="menu" id="rest_menu" class="expandable"
+					onclick="change(this, document.getElementById('rest_data'), document.getElementById('rest_state'));"
+					onmouseover="this.style.listStyleImage='url(images/bucket_tipping_16_icon.png)';"
+					onmouseout="restoreIcon(this, document.getElementById('rest_state'));">
+				<input name="state" id="rest_state" type="hidden" value="false">
+				<a href="rest.html" target="_parent">REST</a>
 			</li>
-			<li><a href="acl.html" target="_parent">Access Control List</a></li>
-			<li><a href="core.html" target="_parent">Core</a></li>
-			<li class="menu_parent"><a href="database.html" target="_parent">Database</a>
-				<ul class="menu_hidden no_indent fish">
-					<li><a href="database.html#user" target="_parent" class="code">user</a></li>
-					<li><a href="database.html#bucket" target="_parent" class="code">bucket</a></li>
-					<li><a href="database.html#object" target="_parent" class="code">object</a></li>
-					<li><a href="database.html#bucket_permission" target="_parent" class="code">bucket_permission</a></li>
-					<li><a href="database.html#object_permission" target="_parent" class="code">object_permission</a></li>
-					<li><a href="database.html#object_metadata" target="_parent" class="code">object_metadata</a></li>
+			<ul name="data" id="rest_data" class="no_indent hidden">
+				<li class="leaf"><a href="rest_service.html" target="_parent">Service</a></li>
+				<li name="menu" id="bucket_menu" class="expandable"
+						onclick="change(this, document.getElementById('bucket_data'), document.getElementById('bucket_state'));"
+						onmouseover="this.style.listStyleImage='url(images/bucket_tipping_16_icon.png)';"
+						onmouseout="restoreIcon(this, document.getElementById('bucket_state'));">
+					<input name="state" id="bucket_state" type="hidden" value="false">
+					<a href="rest_bucket.html" target="_parent">Bucket</a>
+				</li>
+				<ul name="data" id="bucket_data" class="no_indent fish hidden">
+					<li><a href="rest_bucket.html#get_bucket" target="_parent" class="code">GET</a></li>
+					<li><a href="rest_bucket.html#put_bucket" target="_parent" class="code">PUT</a></li>
+					<li><a href="rest_bucket.html#delete_bucket" target="_parent" class="code">DELETE</a></li>
 				</ul>
+				<li class="leaf"><a href="rest_object.html" target="_parent">Object</a></li>
+				<li class="leaf"><a href="rest_authentication.html" target="_parent">Authentication</a></li>
+			</ul>
+			<li class="leaf"><a href="acl.html" target="_parent">Access Control List</a></li>
+			<li class="leaf"><a href="core.html" target="_parent">Core</a></li>
+			<li name="menu" id="database_menu" class="expandable"
+					onclick="change(this, document.getElementById('database_data'), document.getElementById('database_state'));"
+					onmouseover="this.style.listStyleImage='url(images/bucket_tipping_16_icon.png)';"
+					onmouseout="restoreIcon(this, document.getElementById('database_state'));">
+				<input name="state" id="database_state" type="hidden" value="false">
+				<a href="database.html" target="_parent">Database</a>
 			</li>
-			<li><a href="filestorage.html" target="_parent">Filesystem</a></li>
+			<ul name="data" id="database_data" class="no_indent fish hidden">
+				<li><a href="database.html#user" target="_parent" class="code">user</a></li>
+				<li><a href="database.html#bucket" target="_parent" class="code">bucket</a></li>
+				<li><a href="database.html#object" target="_parent" class="code">object</a></li>
+				<li><a href="database.html#bucket_permission" target="_parent" class="code">bucket_permission</a></li>
+				<li><a href="database.html#object_permission" target="_parent" class="code">object_permission</a></li>
+				<li><a href="database.html#object_metadata" target="_parent" class="code">object_metadata</a></li>
+			</ul>
+			<li class="leaf"><a href="filestorage.html" target="_parent">Filesystem</a></li>
 		</ul>
 	</div>
 </body>
