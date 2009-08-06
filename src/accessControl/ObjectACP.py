@@ -123,7 +123,7 @@ def checkUserPermission(user, bucket, key, action):
 					  (SELECT COUNT(*) FROM object_permission where userid IN(2, %s) and bucket = %s and object = %s and permission IN('write', 'full_control'))
 					''', (bucket, user, bucket, user, bucket, key))
 			else:
-				result = conn.executeStatement('''SELECT (SELECT COUNT(*) FROM bucket WHERE bucket = %S) +
+				result = conn.executeStatement('''SELECT (SELECT COUNT(*) FROM bucket WHERE bucket = %s) +
 					  (SELECT COUNT(*) FROM bucket_permission where userid = 1 and bucket = %s and permission IN('write', 'full_control')) +
 					  (SELECT COUNT(*) FROM object_permission where userid = 1 and bucket = %s and object = %s and permission IN('write', 'full_control'))
 					''', (bucket, bucket, bucket, key))

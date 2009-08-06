@@ -18,7 +18,7 @@ def setBucket(user, bucket, accessControlPolicy):
 		raise ForbiddenException.AccessDeniedException()
 	BucketLogging.logEvent(bucket, user, 'write_bucket')
 	try:
-		Bucket.setBucket(userId = user, bucket = bucket)
+		Bucket.setBucket(userid = user, bucket = bucket)
 	except ConflictException.BucketAlreadyOwnedByYouException:
 		pass
 	BucketLogging.logEvent(bucket, user, 'write_acp')
@@ -47,6 +47,8 @@ def setBucketACP(user, bucket, accessControlPolicy):
 
 def setBucketLogStatus(user, srcBucket, logBucket):
 	if not BucketACP.checkUserPermission(user, bucket, 'write_log_status'):
+		raise ForbiddenException.AccessDeniedException()
+	if not BucketACP.checkUserPermission(user, bucket, 'write'):
 		raise ForbiddenException.AccessDeniedException()
 	BucketLogging.logEvent(bucket, user, 'write_log_status')
 	return BucketLogging.setBucketLogStatus(srcBucket, logBucket)

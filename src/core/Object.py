@@ -47,7 +47,7 @@ getObject
 	returns:
 		dict
 			str key
-			dict owner - userId, username
+			dict owner - userid, username
 			str eTag
 			str lastModified
 			dict metadata - conditional
@@ -138,9 +138,9 @@ def getObject(bucket, key, getMetadata, getData, byteRangeStart = None, byteRang
 	returnDict = {'key':str(result[0]),
 	              'bucket':str(result[1]),
 	              'hash':hashfield,
-	              'creationTime':str(result[3]),
+	              'creationTime':((result[3]).isoformat('T') + 'Z'),
 	              'eTag':str(result[4]),
-	              'lastModified':str(result[5]),
+	              'lastModified':((result[5]).isoformat('T') + 'Z'),
 	              'size':size,
 	              'content-type':str(result[7]),
 	              'owner':{'id':int(result[10]),
@@ -165,7 +165,7 @@ def getObject(bucket, key, getMetadata, getData, byteRangeStart = None, byteRang
 '''
 setObject
 	params:
-		userId
+		userid
 		bucket
 		key
 		metadata
@@ -177,14 +177,16 @@ setObject
 	returns:
 
 '''
-def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_type = None, content_disposition = None, content_encoding = None):
+def setObject(userid, bucket, key, metadata, data, content_md5 = None, content_type = None, content_disposition = None, content_encoding = None):
 	'''setObject'''
 
+	if not userid:
+		userid = 1
 	conn = Connection()
 	try:
 
 		#Validate the bucket
-		_verifyBucket(conn, bucket, userId, True)
+		_verifyBucket(conn, bucket, userid, True)
 
 		#Check for object and get information from database
 		calculatedMD5 = md5.new(data)
@@ -247,12 +249,12 @@ def setObject(userId, bucket, key, metadata, data, content_md5 = None, content_t
 					raise
 			hashString = str(hashfieldHexDigest)
 			query = "UPDATE object SET userid = %s, hashfield = %s, eTag = %s, object_mod_time = NOW(), size = %s, content_type = %s, content_encoding = %s, content_disposition = %s WHERE bucket = %s AND object = %s"
-			conn.executeStatement(query, (int(userId), hashString, str(calculatedMD5HexDigest), int(size), escape_string(str(content_type)), escape_string(str(content_encoding)), escape_string(str(content_disposition)), escape_string(str(bucket)), escape_string(str(key))))
+			conn.executeStatement(query, (int(userid), hashString, str(calculatedMD5HexDigest), int(size), escape_string(str(content_type)), escape_string(str(content_encoding)), escape_string(str(content_disposition)), escape_string(str(bucket)), escape_string(str(key))))
 			conn.executeStatement("DELETE FROM object_metadata WHERE bucket = %s AND object = %s", (escape_string(str(bucket)), escape_string(str(key))))
 		else:
 			query = "INSERT INTO object (userid, object, bucket, hashfield, object_create_time, eTag, object_mod_time, size, content_type, content_encoding, content_disposition) VALUES (%s, %s, %s, %s, NOW(), %s, NOW(), %s, %s, %s, %s)"
 			hashString = str(hashfieldHexDigest)
-			conn.executeStatement(query, (int(userId), escape_string(str(key)), escape_string(str(bucket)), hashString, str(calculatedMD5HexDigest), int(size), escape_string(str(content_type)), escape_string(str(content_encoding)), escape_string(str(content_disposition))))
+			conn.executeStatement(query, (int(userid), escape_string(str(key)), escape_string(str(bucket)), hashString, str(calculatedMD5HexDigest), int(size), escape_string(str(content_type)), escape_string(str(content_encoding)), escape_string(str(content_disposition))))
 		if metadataQuery != "":
 			conn.executeStatement(metadataQuery, ())
 	except:
@@ -282,7 +284,7 @@ cloneObject
 		str sourceBucket
 		str destinationKey
 		str destinationBucket
-		int userId
+		int userid
 		dict metadata - optional
 		str ifMatch - optional
 		str ifNotMatch - optional
@@ -296,7 +298,7 @@ cloneObject
 		UserNotFound
 		PreconditionFailed
 '''
-def cloneObject(userId, sourceBucket, sourceKey, destinationBucket, destinationKey, metadata = None, ifMatch = None, ifNotMatch = None, ifModifiedSince = None, ifNotModifiedSince = None):
+def cloneObject(userid, sourceBucket, sourceKey, destinationBucket, destinationKey, metadata = None, ifMatch = None, ifNotMatch = None, ifModifiedSince = None, ifNotModifiedSince = None):
 	'''clone object'''
 	original = getObject(sourceBucket, sourceKey, True, True, None, None, ifMatch, ifNotMatch, ifModifiedSince, ifNotModifiedSince)
 	if metadata != None:
@@ -309,7 +311,7 @@ def cloneObject(userId, sourceBucket, sourceKey, destinationBucket, destinationK
 		content_encoding = original['content-encoding']
 	else:
 		content_encoding = None
-	return setObject(userId, destinationBucket, destinationKey, original['metadata'], original['data'], original['eTag'], original['content-type'], content_disposition, content_encoding)
+	return setObject(userid, destinationBucket, destinationKey, original['metadata'], original['data'], original['eTag'], original['content-type'], content_disposition, content_encoding)
 
 
 

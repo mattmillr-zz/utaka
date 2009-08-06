@@ -52,6 +52,9 @@ class Connection:
 	def getRowCount(self):
 		'''returns cursor.rowcount()'''
 		return self.cursor.rowcount
+		
+	def ping(self):
+		self.conn.ping()
 
 	def commit(self):
 		self.conn.commit()

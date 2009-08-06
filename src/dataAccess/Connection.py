@@ -27,9 +27,12 @@ connA.close()
 
 from utaka.src.dataAccess.SingleConnection import Connection as SingleConnection
 import MySQLdb
+import datetime
+
 
 dcp = [SingleConnection(True)]
 rcp = [SingleConnection(False)]
+#timer = datetime.datetime.today()
 
 class Connection:
 	def __init__(self, useDictCursor = False):
@@ -38,6 +41,10 @@ class Connection:
 				self.innerConn = dcp.pop()
 			else:
 				self.innerConn = rcp.pop()
+			try:
+				self.innerConn.ping()
+			except:
+				pass
 			utakaLog = open('/var/www/html/utaka/utakaLog', 'a')
 			try:
 				if self.usingDictCursor():

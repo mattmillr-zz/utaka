@@ -267,3 +267,17 @@ class UserKeyMustBeSpecifiedException(BadRequestException):
 		BadRequestException.__init__(self,
 			{'Message' : 'The bucket POST must contain the specified field name. If it is specified, please check the order of the fields.',
 			 'Code' : 'UserKeyMustBeSpecified'})
+			 
+class UseridNotValidException(BadRequestException):
+	def __init__(self, userid):
+		BadRequestException.__init__(self,
+			{'Message' : 'Userid should be a positive integer greater than 2.',
+			 'Code' : 'UseridNotValid',
+			 'Userid' : userid})
+			 
+class UseridNotFoundException(BadRequestException):
+	def __init__(self, userid):
+		BadRequestException.__init__(self,
+			{'Code' : 'UseridNotFound',
+			 'Description' : 'The userid you provided was not found',
+			 'Userid' : userid})

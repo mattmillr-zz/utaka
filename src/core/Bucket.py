@@ -94,7 +94,7 @@ def getBucket(bucket, prefix, marker, maxKeys, delimiter):
 		for row in result:
 			if int(row[8]) == 1:
 				contents.append({'key':str(row[1]),
-				                 'lastModified':str(row[5]),
+				                 'lastModified':((result[5]).isoformat('T') + 'Z'),
 				                 'eTag':str(row[4]),
 				                 'size':int(row[6]),
 				                 'storageClass':'STANDARD',
@@ -123,26 +123,26 @@ def getBucket(bucket, prefix, marker, maxKeys, delimiter):
 setBucket
 	params:
 		str bucket
-		int userId
+		int userid
 '''
-def setBucket(bucket, userId):
+def setBucket(bucket, userid):
 	'''creates a new empty bucket'''
 	MAX_BUCKETS_PER_USER = 100
 
 	conn = Connection()
 	#Validate the bucket
 	try:
-		_verifyBucket(conn, bucket, False, userId)
+		_verifyBucket(conn, bucket, False, userid)
 
 		#Check if user has too many buckets
 		query = "SELECT bucket FROM bucket WHERE userid = %s"
-		result = conn.executeStatement(query, (int(userId)))
+		result = conn.executeStatement(query, (int(userid)))
 		if len(result) >= MAX_BUCKETS_PER_USER:
 				raise BadRequestException.TooManyBucketsException()
 
 		#Write bucket to database and filesystem
 		query = "INSERT INTO bucket (bucket, userid, bucket_creation_time) VALUES (%s, %s, NOW())"
-		conn.executeStatement(query, (escape_string(str(bucket)), int(userId)))
+		conn.executeStatement(query, (escape_string(str(bucket)), int(userid)))
 		path = Config.get('common','filesystem_path')
 		path += str(bucket)
 		os.mkdir(path)
@@ -161,9 +161,9 @@ cloneBucket
 	params:
 		str sourceBucket
 		str destinationBucket
-		str userId
+		str userid
 '''
-def cloneBucket(sourceBucket, destinationBucket, userId):
+def cloneBucket(sourceBucket, destinationBucket, userid):
 	'''makes a deep copy of a bucket'''
 	pass
 
@@ -204,11 +204,11 @@ _verifyBucket
 	params:
 		conn
 		bucketName
-		userId
+		userid
 		exists
 	returns:
 '''
-def _verifyBucket(conn, bucketName, exists, userId=None):
+def _verifyBucket(conn, bucketName, exists, userid=None):
 	'''verifies if a bucketname is valid and can if it exists'''
 	#Check is the bucket name is valid
 	(valid, rule) = _isValidBucketName(bucketName)
@@ -218,7 +218,7 @@ def _verifyBucket(conn, bucketName, exists, userId=None):
 	query = "SELECT userid FROM bucket WHERE bucket = %s"
 	result = conn.executeStatement(query, (escape_string(str(bucketName))))
 	if len(result) > 0 and exists == False:
-		if userId and (int(result[0][0]) == int(userId)):
+		if userid and (int(result[0][0]) == int(userid)):
 			raise ConflictException.BucketAlreadyOwnedByYouException(bucketName)
 		else:
 			raise ConflictException.BucketAlreadyExistsException(bucketName)

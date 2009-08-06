@@ -18,6 +18,7 @@
 customHeaderPrefix : x-amz-
 subresource : acl,location,logging,torrent
 filesystem_path : /var/www/html/utaka/files/
+logsystem_path : /var/www/html/utaka/logs/
 
 [server]
 

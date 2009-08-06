@@ -15,18 +15,18 @@
 
 from utaka.src.dataAccess.Connection import Connection
 import utaka.src.exceptions.InternalErrorException as InternalErrorException
+import utaka.src.exceptions.BadRequestException as BadRequestException
 
 '''
 getService
 	params:
 	returns:
 '''
-def getService(userId):
+def getService(userid):
 	'''returns list of buckets owned by user'''
 	conn = Connection(True)
 	try:
-		query = "SELECT bucket, bucket_creation_time, username FROM bucket RIGHT JOIN user USING(userid) WHERE userid = %s"
-		result = conn.executeStatement(query, (userId,))
+		result = conn.executeStatement("SELECT bucket, bucket_creation_time, username FROM bucket RIGHT JOIN user USING(userid) WHERE userid = %s", (userid,))
 	except:
 		conn.cancelAndClose()
 		raise
@@ -35,8 +35,8 @@ def getService(userId):
 	buckets = []
 	for bucket in result:
 		if bucket['bucket'] != None:
-			buckets.append({'bucketName':bucket['bucket'], 'creationDate':str(bucket['bucket_creation_time'])})
-	return {'user':{'userId':userId,'username':result[0]['username']},'buckets':buckets}
+			buckets.append({'bucketName':bucket['bucket'], 'creationDate':((bucket['bucket_creation_time']).isoformat('T') + 'Z')})
+	return {'user':{'userid':userid,'username':result[0]['username']},'buckets':buckets}
 
 '''
 setService
@@ -82,44 +82,26 @@ def copyService():
 '''
 destroyService
 params:
-	userId
+	userid
 '''
-def destroyService(userId):
+def destroyService(userid):
 	'''deletes an owner'''
+	if not userid or userid <3:
+		raise BadRequestExceptin.UseridNotValidException(userid)
 	conn = Connection()
 	try:
 		#Check if user exists
-		checkUserResult = conn.executeStatment('select count(*) from user where userid = %s', (userId,))
-		if conn.getRowCount() == 0:
-			'''raise error'''
+		checkUserResult = conn.executeStatement('select count(*) from user where userid = %s', (userid,))
+		if checkUserResult[0][0] == 0:
+			raise BadRequestException.UseridNotFoundException(userid)
 		#Give ownership of existing objects to enclosing bucket owners
-
-		query = "SELECT bucket, object FROM object WHERE userid = %s"
-		result = conn.executeStatement(query, (int(userId)))
-		query = "UPDATE object SET userid = (SELECT userid FROM bucket WHERE bucket = %s) WHERE bucket = %s AND object = %s"
-		for row in result:
-			conn.executeStatement(query, (escape_string(str(row[0])), escape_string(str(row[0])), escape_string(str(row[1]))))
-
-		#Check if user still has objects
-		query = "SELECT COUNT(*) FROM object WHERE userid = %s"
-		count = conn.executeStatement(query, (int(userId)))[0]
-		if count > 0:
-			raise UserWriteError("User still has objects.")
-
-		#Check if user still has buckets
-		query = "SELECT COUNT(*) FROM bucket WHERE userid = %s"
-		count = conn.executeStatement(query, (int(userId)))[0]
-		if count > 0:
-			raise UserWriteError("User still has buckets.")
-
-		#Delete permissions pertaining to user
-		conn.executeStatement(query, (int(userId)))
-		query = "DELETE FROM object_permission WHERE userid = %s"
-		conn.executeStatement(query, (int(userId)))
-
+		conn.executeStatement('update object, bucket set object.userid = bucket.userid where object.bucket = bucket.bucket and object.userid = %s', (userid,))
+		#Empty existing buckets
+		conn.executeStatement('delete from object where userid = %s', (userid,))
+		#Delete buckets
+		conn.executeStatement('delete from bucket where userid = %s', (userid,))
 		#Delete user
-		query = "DELETE FROM user WHERE userid = %s"
-		conn.executeStatement(query, (int(userId)))
+		conn.executeStatement('delete from user where userid = %s', (userid,))
 	except:
 		conn.cancelAndClose()
 		raise

@@ -15,7 +15,7 @@ def setObject(user, bucket, key, metadata, data, contentMd5, contentType, conten
 	if not ObjectACP.checkUserPermission(user, bucket, key, 'write'):
 		raise ForbiddenException.AccessDeniedException()
 	BucketLogging.logEvent(bucket, key, user, 'write')
-	result = Object.setObject(userId = user, bucket=bucket, key=key, metadata=metadata, data=data, content_md5 = contentMd5, content_type=contentType, content_disposition=contentDisposition, content_encoding=contentEncoding)
+	result = Object.setObject(userid = user, bucket=bucket, key=key, metadata=metadata, data=data, content_md5 = contentMd5, content_type=contentType, content_disposition=contentDisposition, content_encoding=contentEncoding)
 	ObjectACP.setObjectACP(bucket, key, accessControlPolicy)
 	
 def cloneObject(user, sourceBucket, sourceKey, destBucket, destKey, metadata, ifMatch, ifNotMatch, ifModifiedSince, ifNotModifiedSince, accessControlPolicy):

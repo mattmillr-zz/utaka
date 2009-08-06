@@ -34,14 +34,14 @@ class UtakaBucket:
 			elif self.utakaReq.req.method == 'PUT':
 				operation = self.__putAclOperation
 			else:
-				raise MethodNotAllowedException.ACLMethodNotAllowed(self.utakaReq.req.method)
+				raise MethodNotAllowedException.ACLMethodNotAllowedException(self.utakaReq.req.method)
 		elif 'logging' in self.utakaReq.subresources:
 			if self.utakaReq.req.method == 'GET':
 				operation = self.__getLoggingOperation
 			elif self.utakaReq.req.method == 'PUT':
-				operation = self.__putLoggingOperation
+				raise MethodNotAllowedException.BucketLogginStatusMethodException
 			else:
-				raise MethodNotAllowedException.LoggingStatusMethodNotAllowed(self.utakaReq.req.method)
+				raise MethodNotAllowedException.LoggingStatusMethodNotAllowedException(self.utakaReq.req.method)
 		elif self.utakaReq.req.method == 'GET':
 			operation = self.__getOperation
 		elif self.utakaReq.req.method == 'PUT':
@@ -131,6 +131,7 @@ class UtakaBucket:
 
 		doc = xml.dom.minidom.Document()
 		listBucketEl = doc.createElement("ListBucketResult")
+		listBucketEl.setAttribute('xmlns', 'http://s3.amazonaws.com/doc/2006-03-01/')
 
 		nameEl = doc.createElement("Name")
 		nameEl.appendChild(doc.createTextNode(bucketDictionary.get('name')))

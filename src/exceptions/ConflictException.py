@@ -10,3 +10,4 @@ class BucketAlreadyOwnedByYouException(ConflictException):
 			{'Code' : 'BucketAlreadyOwnedByYou',
 			 'Description' : 'You already own bucket',
 			 'Bucket' : bucket})
+			 

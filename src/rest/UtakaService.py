@@ -51,6 +51,8 @@ class UtakaService:
 		self.utakaReq.write('secretkey:%s\r\n' % results[1])
 
 	def __deleteOperation(self):
+		results = Service.destroyService(self.utakaReq.customHeaderTable['userid'])
+		self.utakaReq.req.status = 204
 		pass
 
 	def __getOperation(self):
@@ -68,6 +70,7 @@ class UtakaService:
 		import xml.dom.minidom
 		doc = xml.dom.minidom.Document()
 		listAllBucketsEl = doc.createElement("ListAllMyBucketsResult")
+		listAllBucketsEl.setAttribute('xmlns', 'http://s3.amazonaws.com/doc/2006-03-01/')
 		ownerEl = doc.createElement("Owner")
 		ownerIdEl = doc.createElement("ID")
 		ownerNameEl = doc.createElement("DisplayName")
@@ -76,7 +79,7 @@ class UtakaService:
 		#owner
 		listAllBucketsEl.appendChild(ownerEl)
 		ownerEl.appendChild(ownerIdEl)
-		ownerIdEl.appendChild(doc.createTextNode(str(userDictionary['userId'])))
+		ownerIdEl.appendChild(doc.createTextNode(str(userDictionary['userid'])))
 		ownerEl.appendChild(ownerNameEl)
 		ownerNameEl.appendChild(doc.createTextNode(userDictionary['username']))
 		#bucket list

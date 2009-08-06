@@ -7,6 +7,7 @@ def toXML(accessControlPolicy):
 	doc = xml.dom.minidom.Document()
 	#AccessControlPolicy
 	acpEl = doc.createElement("AccessControlPolicy")
+	acpEl.setAttribute('xmlns', "http://s3.amazonaws.com/doc/2006-03-01/")
 	#-Owner
 	ownerEl = doc.createElement("Owner")
 	#--ID

@@ -63,7 +63,7 @@ CREATE TABLE bucket_permission (
 	bucket VARCHAR(32) NOT NULL,
 	permission ENUM('read', 'write', 'read_acp', 'write_acp', 'full_control') NOT NULL,
 	PRIMARY KEY(userid, bucket, permission),
-	FOREIGN KEY(userid) REFERENCES user(userid),
+	FOREIGN KEY(userid) REFERENCES user(userid) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(bucket) REFERENCES bucket(bucket) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -75,8 +75,8 @@ CREATE TABLE object_permission (
 	object VARCHAR(64) NOT NULL,
 	permission ENUM('read', 'write', 'read_acp', 'write_acp', 'full_control') NOT NULL,
 	PRIMARY KEY(userid, bucket, object, permission),
-	FOREIGN KEY(userid) REFERENCES user(userid),
-	FOREIGN KEY(bucket) REFERENCES bucket(bucket),
+	FOREIGN KEY(userid) REFERENCES user(userid) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(bucket) REFERENCES bucket(bucket) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(object) REFERENCES object(object) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -88,7 +88,7 @@ CREATE TABLE object_metadata (
 	type VARCHAR(64) NOT NULL,
 	value VARCHAR(64) NOT NULL,
 	PRIMARY KEY(bucket, object, type, value),
-	FOREIGN KEY(bucket) REFERENCES bucket(bucket),
+	FOREIGN KEY(bucket) REFERENCES bucket(bucket) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(object) REFERENCES object(object) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

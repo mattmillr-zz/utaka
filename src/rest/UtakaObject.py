@@ -121,8 +121,8 @@ class UtakaObject:
 	def __putOperation(self):
 		cannedACL = self.utakaReq.customHeaderTable.get('acl', 'private')
 		acp = {}
-		acp['owner'] = {'userid':self.utakaReq.user}
-		acl = [{'grantee':{'userid':self.utakaReq.user}, 'permission':'FULL_CONTROL'}]
+		acp['owner'] = {'userid': (self.utakaReq.user or str(1))}
+		acl = [{'grantee':{'userid': (self.utakaReq.user or str(1))}, 'permission':'FULL_CONTROL'}]
 		if cannedACL == 'public-read':
 			acl.append({'grantee':{'userid':1}, 'permission':'read'})
 		elif cannedACL == 'public-read-write':
