@@ -1,35 +1,31 @@
+#Copyright 2009 Humanitarian International Services Group
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 '''
-import MySQLdb
+Created Aug 4, 2009
 
-connA = MySQLdb.connect('localhost', 'root', 'aburke', 'utaka')
-cursorA = connA.cursor()
-
-cursorA.execute("insert into user(username, accesskey, secretkey) values('a', 'a', 'a'),('b', 'b', 'b')")
-
-connA.rollback()
-
-cursorA.execute("insert into user(username, accesskey, secretkey) values('c', 'c', 'c'),('d', 'd', 'd')")
-
-connA.commit()
-
-cursorA.execute("insert into user(username, accesskey, secretkey) values('e', 'e', 'e'),('f', 'f', 'f')")
-
-connA.rollback()
-
-cursorA.execute("select * from user")
-res = cursorA.fetchall()
-for row in res:
-	print str(row)
-
-cursorA.close()
-connA.close()
+connection pool abstraction over previous Connection.py which is now SingleConnection.py
+sets up module scope connection pool, currently with no size limit
+	pool for both connections with dictionary cursors and regular cursors
+reconnects to db every x hours depending on config file
+@author: Andrew
 '''
 
 from utaka.src.dataAccess.SingleConnection import Connection as SingleConnection
 import utaka.src.Config as Config
 import MySQLdb
 import datetime
-
 
 dcp = [SingleConnection(True)]
 rcp = [SingleConnection(False)]

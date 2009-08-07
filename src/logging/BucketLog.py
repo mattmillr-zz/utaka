@@ -12,6 +12,11 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+'''
+Created on Aug 6, 2009
+event interface over bucket logging
+@author Andrew
+'''
 import utaka.src.dataAccess.Connection as Connection
 import utaka.src.Config as Config
 import utaka.src.logging.Logging as Logging

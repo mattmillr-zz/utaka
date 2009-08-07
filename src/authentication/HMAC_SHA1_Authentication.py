@@ -13,13 +13,29 @@
 #limitations under the License.
 '''
 Created on Jul 21, 2009
-
+For authentication of utaka users using keyed-hash message
 @author: Andrew
 '''
 
 from utaka.src.dataAccess.Connection import Connection
 import utaka.src.exceptions.ForbiddenException as ForbiddenException
+import utaka.src.config as Config
 
+'''
+getUser
+	params:
+		signature - passed in signature
+		accessKey - key to authenticate stringToSign with
+		stringToSign - string to be authenticated
+	returns:
+		user - userid
+		isAdmin - bool...whether or not user has admin capabilities
+		computedSig - the computed signature
+	local raises:
+		InvalidAccessKeyIdException - accesskeyid was not found in system
+		SignatureDoesNotMatchException
+		
+'''
 def getUser(signature, accessKey, stringToSign):
 	conn = Connection(useDictCursor = True)
 	try:
@@ -32,7 +48,8 @@ def getUser(signature, accessKey, stringToSign):
 	pkey = rs[0]['secretKey']
 	isAdmin = rs[0]['isAdmin']
 	computedSig = __computeBase64Signature(pkey, stringToSign)
-	if computedSig == signature or signature == 'free':
+	mode = Config.get('common', 'mode')
+	if computedSig == signature or (mode == 'debug' and signature == 'free'):
 		return user, isAdmin, computedSig
 	else:
 		stringToSignByteSeq = []

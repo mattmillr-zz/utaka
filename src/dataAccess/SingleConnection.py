@@ -12,6 +12,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+'''
+Created July, 2009
+
+database connection, connection parameters pulled from config
+keeps track of it's connection time
+@author: Andrew
+'''
 import MySQLdb
 import utaka.src.Config as Config
 import utaka.src.exceptions.InternalErrorException as InternalErrorException
@@ -52,7 +59,6 @@ class Connection:
 		return self.cursor.fetchall()
 
 	def getRowCount(self):
-		'''returns cursor.rowcount()'''
 		return self.cursor.rowcount
 		
 	def ping(self):
