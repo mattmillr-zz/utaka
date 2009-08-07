@@ -1,0 +1,5 @@
+2009-08-07 09:36:40,114 - INFO - bucket_get,user=4
+2009-08-07 09:37:54,784 - INFO - bucket_get,user=4
+2009-08-07 09:38:04,131 - INFO - bucket_get_acp,user=4
+2009-08-07 09:43:21,374 - INFO - object_set,user=4,key=hello.txt,keyDigest=f03d2278c349dadc690d2cbc9e69695992fc6d00
+2009-08-07 09:43:36,287 - INFO - object_get,user=4,key=hello.txt

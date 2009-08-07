@@ -1,7 +1,8 @@
 
+
 import utaka.src.core.Bucket as Bucket
 import utaka.src.accessControl.BucketACP as BucketACP
-import utaka.src.logging.Bucket as BucketLogging
+import utaka.src.logging.BucketLog as BucketLogging
 import utaka.src.exceptions.ForbiddenException as ForbiddenException
 import utaka.src.exceptions.ConflictException as ConflictException
 
@@ -9,40 +10,41 @@ import utaka.src.exceptions.ConflictException as ConflictException
 def getBucket(user, bucket, prefix, marker, maxKeys, delimiter):
 	if not BucketACP.checkUserPermission(user, bucket, 'read'):
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'read_bucket')
+	BucketLogging.logBucketEvent(user, bucket, 'get')
 	return Bucket.getBucket(bucket=bucket, prefix=prefix, marker=marker, maxKeys=maxKeys, delimiter=delimiter)
 
 
 def setBucket(user, bucket, accessControlPolicy):
 	if not user:
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'write_bucket')
 	try:
 		Bucket.setBucket(userid = user, bucket = bucket)
 	except ConflictException.BucketAlreadyOwnedByYouException:
 		pass
-	BucketLogging.logEvent(bucket, user, 'write_acp')
+	BucketLogging.logBucketEvent(user, bucket, 'set')
 	BucketACP.setBucketACP(bucket, accessControlPolicy)
+	BucketLogging.logBucketEvent(user, bucket, 'set_acp')
+
 
 def destroyBucket(user, bucket):
 	if not BucketACP.checkUserPermission(user, bucket, 'destroy'):
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'destroy_bucket')
 	Bucket.destroyBucket(bucket)
+	BucketLogging.logBucketEvent(user, bucket, 'delete')
 
 
 def getBucketACP(user, bucket):
 	if not BucketACP.checkUserPermission( user, bucket, 'read_acp'):
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'read_bucket_acp')
+	BucketLogging.logBucketEvent(user, bucket, 'get_acp')
 	return BucketACP.getBucketACP(bucket)
 
 
 def setBucketACP(user, bucket, accessControlPolicy):
 	if not BucketACP.checkUserPermission(user, bucket, 'write_acp'):
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'write_bucket_acp')
 	BucketACP.setBucketACP(bucket, accessControlPolicy)
+	BucketLogging.logBucketEvent(user, bucket, 'set_acp')
 
 
 def setBucketLogStatus(user, srcBucket, logBucket):
@@ -50,12 +52,12 @@ def setBucketLogStatus(user, srcBucket, logBucket):
 		raise ForbiddenException.AccessDeniedException()
 	if not BucketACP.checkUserPermission(user, bucket, 'write'):
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'write_log_status')
+	BucketLogging.logBucketEvent(user, bucket, 'set_log_status')
 	return BucketLogging.setBucketLogStatus(srcBucket, logBucket)
 
 
 def getBucketLogStatus(user, bucket):
 	if not BucketACP.checkUserPermission(user, bucket, 'read_log_status'):
 		raise ForbiddenException.AccessDeniedException()
-	BucketLogging.logEvent(bucket, user, 'read_log_status')
+	BucketLogging.logBucketEvent(user, bucket, 'get_log_status')
 	return BucketLogging.getBucketLogStatus(bucket)

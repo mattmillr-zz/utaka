@@ -73,7 +73,8 @@ def setObjectACP(bucket, key, accessControlPolicy):
 			aclValueList.append(entry['permission'])
 		insertString += ', '.join(aclWildcardList)
 		removeRS = conn.executeStatement(removeString, (bucket, key))
-		insertRS = conn.executeStatement(insertString, aclValueList)
+		if len(accessControlPolicy) > 0:
+			insertRS = conn.executeStatement(insertString, aclValueList)
 	except:
 		conn.cancelAndClose()
 		raise

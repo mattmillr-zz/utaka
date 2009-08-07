@@ -15,6 +15,7 @@
 import MySQLdb
 import utaka.src.Config as Config
 import utaka.src.exceptions.InternalErrorException as InternalErrorException
+import datetime
 
 class Connection:
 
@@ -24,6 +25,7 @@ class Connection:
 		passwd = Config.get('database','mysql_utaka_password')
 		db = Config.get('database','mysql_utaka_database')
 		self.conn = MySQLdb.connect(host = host, user = user, passwd = passwd, db = db)
+		self.connectTime = datetime.datetime.today()
 		if useDictCursor:
 			self._usingDictCursor = True
 			self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)

@@ -26,45 +26,39 @@ connA.close()
 '''
 
 from utaka.src.dataAccess.SingleConnection import Connection as SingleConnection
+import utaka.src.Config as Config
 import MySQLdb
 import datetime
 
 
 dcp = [SingleConnection(True)]
 rcp = [SingleConnection(False)]
-#timer = datetime.datetime.today()
+dbTimer = datetime.datetime.today()
+dbTimeout = datetime.timedelta(hours = int(Config.get('database', 'connection_timeout_in_hours')))
 
 class Connection:
 	def __init__(self, useDictCursor = False):
-		try:
+		if len(dcp) > 0:
 			if useDictCursor:
 				self.innerConn = dcp.pop()
 			else:
 				self.innerConn = rcp.pop()
-			try:
-				self.innerConn.ping()
-			except:
-				pass
-			utakaLog = open('/var/www/html/utaka/utakaLog', 'a')
-			try:
-				if self.usingDictCursor():
-					utakaLog.write('Dictionary Database Connection Pulled from Pool\r\n')
-				else:
-					utakaLog.write('Regular Database Connection Pulled from Pool\r\n')
-			finally:
-				utakaLog.close()
-		except IndexError:
+			now = datetime.datetime.today()
+			if (now - dbTimeout) > self.innerConn.connectTime:
+				self.innerConn.close()
+				self.innerConn = SingleConnection(useDictCursor)
+		else:
 			self.innerConn = SingleConnection(useDictCursor)
-	
+
 	def usingDictCursor(self):
 		return self.innerConn.usingDictCursor()
-		
+
 	def executeStatement(self, statement, placeholder):
 		return self.innerConn.executeStatement(statement, placeholder)
-		
+
 	def getRowCount(self):
 		return self.innerConn.rowcount()
-		
+
 	def commit(self):
 		self.innerConn.commit()
 		

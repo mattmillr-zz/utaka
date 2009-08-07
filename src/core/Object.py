@@ -182,6 +182,7 @@ def setObject(userid, bucket, key, metadata, data, content_md5 = None, content_t
 
 	if not userid:
 		userid = 1
+	hashString = None
 	conn = Connection()
 	try:
 
@@ -271,7 +272,7 @@ def setObject(userid, bucket, key, metadata, data, content_md5 = None, content_t
 		fileReader.write(data)
 	finally:
 		fileReader.close()
-	return content_type, str(calculatedMD5HexDigest)
+	return content_type, str(calculatedMD5HexDigest), hashString
 
 
 

@@ -8,6 +8,12 @@ class BucketAlreadyOwnedByYouException(ConflictException):
 	def __init__(self, bucket):
 		ConflictException.__init__(self,
 			{'Code' : 'BucketAlreadyOwnedByYou',
-			 'Description' : 'You already own bucket',
+			 'Message' : 'You already own bucket',
 			 'Bucket' : bucket})
 			 
+class BucketNotEmptyException(ConflictException):
+	def __init__(self, bucket):
+		ConflictException.__init__(self,
+			{'Code' : 'BucketNotEmpty',
+			 'Message' : "Bucket's must be empty to be deleted",
+			 'Bucket' : bucket})

@@ -31,7 +31,15 @@ mysql_utaka_username : root
 mysql_utaka_password : aburke
 mysql_utaka_database : utaka
 
+connection_timeout_in_hours : 1
+
 [authentication]
 
 header : Authorization
 prefix : AWS
+
+[logging]
+
+path : /var/www/html/utaka/logs/
+level : NOTSET
+bucket_level : NOTSET

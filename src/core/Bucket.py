@@ -94,7 +94,7 @@ def getBucket(bucket, prefix, marker, maxKeys, delimiter):
 		for row in result:
 			if int(row[8]) == 1:
 				contents.append({'key':str(row[1]),
-				                 'lastModified':((result[5]).isoformat('T') + 'Z'),
+				                 'lastModified':((row[5]).isoformat('T') + 'Z'),
 				                 'eTag':str(row[4]),
 				                 'size':int(row[6]),
 				                 'storageClass':'STANDARD',
